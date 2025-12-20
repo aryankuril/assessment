@@ -165,7 +165,7 @@ export default function Scattered3DCards() {
   return (
 <section id="task45"
   ref={sectionRef}
-  className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center lg:-mt-20"
+  className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center lg:-mt-20 -mt-10"
   style={{ perspective: "1400px" }}
 >
      {/* <h1 className=" text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-30">

@@ -35,7 +35,7 @@ const Cart = () => {
         {cart.map((item) => (
           <div
             key={item.id}
-            className="flex items-center lg:gap-6 gap-3 border rounded-xl lg:p-5 p-3"
+            className="flex items-center lg:gap-6 gap-3 border border-black rounded-xl lg:p-5 p-3"
           >
             {/* IMAGE */}
            <div className="  w-24 h-24 rounded-lg overflow-hidden border bg-gray-100">
@@ -115,7 +115,7 @@ const Cart = () => {
       </div>
 
       {/* TOTAL + CHECKOUT */}
-      <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <div className="mt-12 border-t-black pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <h2 className="text-2xl font-semibold text-black">
           Total: ₹{total}
         </h2>

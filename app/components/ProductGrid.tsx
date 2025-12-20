@@ -18,8 +18,8 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   const visibleProducts = showAll ? products : products.slice(0, 9);
 
   return (
-    <div id="task45" className="container py-0 sm:py-15 lg:py-20">
-        <h1 className=" text-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-10">
+    <div id="task45" className="container py-10 sm:py-15 lg:py-20">
+        <h1 className=" text-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-8 ">
         Task 4&5
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

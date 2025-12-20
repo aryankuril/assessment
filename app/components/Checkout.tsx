@@ -69,7 +69,7 @@ const Checkout = () => {
     setPopup(status);
 
     setTimeout(() => {
-      router.push("/");
+      router.push("/task45");
     }, 3000);
   };
 
@@ -101,7 +101,7 @@ const Checkout = () => {
           {cart.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-6 border rounded-xl p-5"
+              className="flex items-center gap-6 border border-black rounded-xl p-5"
             >
               {/* IMAGE */}
               <div className="w-24 h-24 rounded-lg overflow-hidden border bg-gray-100">
@@ -166,7 +166,7 @@ const Checkout = () => {
         </div>
 
         {/* RIGHT: SUMMARY */}
-        <div className="border rounded-xl p-6 h-fit">
+        <div className="border border-black rounded-xl p-6 h-fit">
           <h2 className="text-xl font-semibold mb-6 text-black">Order Summary</h2>
 
           <div className="flex justify-between text-gray-600 mb-4">
@@ -179,7 +179,7 @@ const Checkout = () => {
             <span>Free</span>
           </div>
 
-          <div className="border-t pt-4 flex justify-between text-lg font-semibold text-black">
+          <div className="border-t-black pt-4 flex justify-between text-lg font-semibold text-black">
             <span>Total</span>
             <span>₹{total}</span>
           </div>
@@ -216,7 +216,7 @@ const Checkout = () => {
 
       {/* POPUP */}
       {popup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 w-[90%] max-w-md text-center shadow-lg">
             {popup === "success" ? (
               <>

@@ -1,90 +1,188 @@
-"use client";
-import { useEffect, useRef } from "react";
-import Image from "next/image";
-import gsap from "gsap";
-import ScrollTrigger from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger);
+'use client'
+
+import { useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
+
 const images = [
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg" },
-];
-export default function SecondSlider() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement[]>([]);
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const radius = 520; // distance from center
-      const depth = 900;  // z-axis depth
-      const total = images.length;
-      const step = 360 / total;
-      // INITIAL POSITION ON 3D RING
-      cardsRef.current.forEach((card, i) => {
-        const angle = i * step;
-        gsap.set(card, {
-          rotateY: angle,
-          z: -radius,
-          transformOrigin: `50% 50% ${depth}px`,
-          scale: i === 0 ? 1 : 0.85,
-          opacity: i === 0 ? 1 : 0.45,
-        });
-      });
-      // MAIN TIMELINE
-      gsap.timeline({
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg' },
+  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg' },
+  
+]
+
+export default function Scroll3DRotation() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const ringRef = useRef<HTMLDivElement>(null)
+
+useEffect(() => {
+  if (!ringRef.current || !containerRef.current) return
+
+  const panels = gsap.utils.toArray<HTMLDivElement>('.panel')
+
+  const mm = gsap.matchMedia()
+
+  mm.add(
+    {
+      isMobile: '(max-width: 640px)',
+      isDesktop: '(min-width: 641px)',
+    },
+    (context) => {
+      const { isMobile } = context.conditions as {
+        isMobile: boolean
+        isDesktop: boolean
+      }
+
+      const total = panels.length
+      const angle = 360 / total
+
+      // 🔥 DIFFERENT VALUES
+      const radius = isMobile ? 170 : 320
+      const scaleX = isMobile ? 1.37 : 1.19
+
+      panels.forEach((panel, i) => {
+        gsap.set(panel, {
+          rotateY: i * angle,
+          translateZ: radius,
+          transformOrigin: `50% 50% ${-radius}px`,
+          scaleX,
+           backfaceVisibility: 'visible',
+        })
+      })
+
+      gsap.to(ringRef.current, {
+        rotateY: -360,
+        ease: 'none',
         scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: `+=${total * 120}%`,
+          trigger: containerRef.current,
+          start: 'top top',
+          end: '+=2500',
           scrub: 1,
           pin: true,
+          anticipatePin: 1,
         },
       })
-      .to(cardsRef.current, {
-        rotateY: `+=${360}`,
-        ease: "none",
-      })
-      .to(
-        cardsRef.current,
-        {
-          opacity: (i) => (i === 0 ? 1 : 0.45),
-          scale: (i) => (i === 0 ? 1 : 0.85),
-        },
-        0
-      );
-    }, sectionRef);
-    return () => ctx.revert();
-  }, []);
+
+      return () => ScrollTrigger.killAll()
+    }
+  )
+
+  return () => mm.revert()
+}, [])
+
+
+
+useEffect(() => {
+  const ring = ringRef.current
+  if (!ring) return
+
+  let isDragging = false
+  let startX = 0
+  let startY = 0
+  let baseRotateY = 0
+  let baseRotateX = 0
+
+  const onPointerDown = (e: PointerEvent) => {
+    isDragging = true
+    startX = e.clientX
+    startY = e.clientY
+
+    baseRotateY = gsap.getProperty(ring, 'rotateY') as number
+    baseRotateX = gsap.getProperty(ring, 'rotateX') as number
+
+    ring.setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (!isDragging) return
+
+    gsap.set(ring, {
+      rotateY: baseRotateY + (e.clientX - startX) * 0.3,
+      rotateX: baseRotateX - (e.clientY - startY) * 0.25,
+    })
+  }
+
+  const resetTilt = () => {
+    if (!isDragging) return
+    isDragging = false
+
+    gsap.to(ring, {
+      rotateX: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+    })
+  }
+
+  ring.addEventListener('pointerdown', onPointerDown)
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', resetTilt)
+  window.addEventListener('pointercancel', resetTilt)
+
+  return () => {
+    ring.removeEventListener('pointerdown', onPointerDown)
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', resetTilt)
+    window.removeEventListener('pointercancel', resetTilt)
+  }
+}, [])
+
+
+
   return (
     <section
-      ref={sectionRef}
-      className="relative h-screen w-full bg-black flex items-center justify-center overflow-hidden"
-      style={{ perspective: "1400px" }}
-    >
-      {images.map((img, i) => (
-        <div
-          key={i}
-          ref={(el) => {
-  if (el) cardsRef.current[i] = el;
-}}
-          className="absolute w-[240px] md:w-[300px] aspect-square rounded-xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.7)]"
+  ref={containerRef}
+  className="relative h-screen w-full bg-white overflow-hidden flex items-center justify-center"
+>
+  {/* 🔥 Heading */}
+  <h1 className="
+    absolute
+    top-20
+    left-1/2
+    -translate-x-1/2
+    text-black
+     text-2xl        /* mobile */
+  sm:text-3xl     /* small screens */
+  md:text-4xl     /* tablets */
+  lg:text-5xl     /* desktop */
+    font-bold
+    z-20
+
+  ">
+    Task1
+  </h1>
+
+        
+        
+      <div className="relative w-[120px] h-[180px] sm:w-[260px] sm:h-[280px] perspective-[1500px]">
+        <motion.div
+          ref={ringRef}
+          className="absolute inset-0"
           style={{
-            transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden",
+            transformStyle: 'preserve-3d',
           }}
         >
-          <Image
-            src={img.src}
-            alt={`card-${i}`}
-            fill
-            className="object-cover"
-            priority={i === 0}
-          />
-        </div>
-      ))}
+          {images.map((img, i) => (
+            <div
+              key={i}
+              className="panel absolute inset-0 overflow-hidden shadow-2xl bg-black"
+            >
+              <img
+                src={img.src}
+                alt=""
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            </div>
+          ))}
+        </motion.div>
+      </div>
     </section>
-  );
+  )
 }

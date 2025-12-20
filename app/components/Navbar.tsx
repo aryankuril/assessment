@@ -85,13 +85,14 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE MENU BUTTON */}
-        <button
-          className="ml-auto lg:hidden"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          ☰
-        </button>
+      <button
+  className="ml-auto lg:hidden text-black text-4xl font-bold"
+  onClick={() => setIsOpen(!isOpen)}
+  aria-label="Toggle menu"
+>
+  ☰
+</button>
+
       </nav>
 
       {/* MOBILE MENU */}
