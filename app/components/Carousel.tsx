@@ -26,20 +26,26 @@ export default function Scattered3DCards() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      /* ================= MASTER LAYOUT (FIXED DISTANCES) ================= */
+      /* ================= SCATTER POSITIONS ================= */
+      const scatterPositions = [
+        { x: vw * 0.6, y: 0 },          // right
+        { x: -vw * 0.6, y: 0 },         // left
+        { x: 0, y: -vh * 0.5 },         // top
+        { x: 0, y: vh * 0.5 },          // bottom
+        { x: vw * 0.45, y: -vh * 0.35 }, // right-top
+        { x: -vw * 0.45, y: -vh * 0.35 },// left-top
+        { x: vw * 0.45, y: vh * 0.35 },  // right-bottom
+        { x: -vw * 0.45, y: vh * 0.35 }, // left-bottom
+      ];
+
       const layout = images.map((_, i) => {
-        if (i === 0) {
-          return { x: 0, y: 0, z: 0 };
-        }
-
-        const angle = (i / images.length) * Math.PI * 2;
-
+        const pos = scatterPositions[i % scatterPositions.length];
         return {
-          x: Math.cos(angle) * vw * 0.9,
-          y: Math.sin(angle) * vh * 0.15,
-          z: -400 - i * 120,
-          rotateX: gsap.utils.random(-12, 12),
-          rotateY: gsap.utils.random(-20, 20),
+          x: pos.x,
+          y: pos.y,
+          z: -300 - i * 120,
+          rotateX: gsap.utils.random(-15, 15),
+          rotateY: gsap.utils.random(-25, 25),
           scale: 0.85,
         };
       });
@@ -48,7 +54,7 @@ export default function Scattered3DCards() {
       cardsRef.current.forEach((card, i) => {
         gsap.set(card, {
           ...layout[i],
-          opacity: i === 0 ? 1 : 0.6,
+          opacity: i === 0 ? 1 : 0.5,
           zIndex: i === 0 ? 20 : 1,
           force3D: true,
           transformPerspective: 1400,
@@ -65,23 +71,42 @@ export default function Scattered3DCards() {
         },
       });
 
-      /* ================= LAYOUT ROTATION ================= */
+      /* ================= DIRECTIONAL ROTATION ================= */
       for (let active = 0; active < images.length - 1; active++) {
+        const from = layout[active];
+
+        const dirX = gsap.utils.clamp(-1, 1, from.x / vw);
+        const dirY = gsap.utils.clamp(-1, 1, from.y / vh);
+
         tl.to(
           cardsRef.current,
           {
-            x: (i) => layout[(i - active - 1 + images.length) % images.length].x,
-            y: (i) => layout[(i - active - 1 + images.length) % images.length].y,
-            z: (i) => layout[(i - active - 1 + images.length) % images.length].z,
+            x: (i) =>
+              i === active + 1
+                ? 0
+                : layout[(i - active - 1 + images.length) % images.length].x +
+                  dirX * 120,
+
+            y: (i) =>
+              i === active + 1
+                ? 0
+                : layout[(i - active - 1 + images.length) % images.length].y +
+                  dirY * 120,
+
+            z: (i) =>
+              i === active + 1
+                ? 0
+                : layout[(i - active - 1 + images.length) % images.length].z,
+
             rotateX: (i) =>
-              layout[(i - active - 1 + images.length) % images.length].rotateX,
+              i === active + 1 ? 0 : from.rotateX,
             rotateY: (i) =>
-              layout[(i - active - 1 + images.length) % images.length].rotateY,
-            scale: (i) =>
-              (i === active + 1 ? 1 : 0.85),
-            opacity: (i) =>
-              (i === active + 1 ? 1 : 0.45),
+              i === active + 1 ? 0 : from.rotateY,
+
+            scale: (i) => (i === active + 1 ? 1 : 0.85),
+            opacity: (i) => (i === active + 1 ? 1 : 0.4),
             zIndex: (i) => (i === active + 1 ? 20 : 1),
+
             duration: 1,
             ease: "power3.inOut",
           },
