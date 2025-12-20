@@ -54,6 +54,16 @@ export default function Slider() {
     });
   };
 
+  const resetTilt = () => {
+  gsap.to(ringRef.current, {
+    rotateX: 0,
+    rotateY: -step * angle, // keep correct slide facing
+    duration: 0.6,
+    ease: "power3.out",
+  });
+};
+
+
   /* ---------- SCROLL (FIXED) ---------- */
   useEffect(() => {
     if (!containerRef.current) return;
@@ -96,39 +106,49 @@ export default function Slider() {
   }, [step, total]);
 
   /* ---------- Drag ---------- */
-  useEffect(() => {
-    const ring = ringRef.current;
-    if (!ring) return;
+useEffect(() => {
+  const ring = ringRef.current;
+  if (!ring) return;
 
-    const down = (e: PointerEvent) => {
-      isDragging.current = true;
-      startX.current = e.clientX;
-      startY.current = e.clientY;
-      rotationY.current = gsap.getProperty(ring, "rotateY") as number;
-      rotationX.current = gsap.getProperty(ring, "rotateX") as number;
-      ring.setPointerCapture(e.pointerId);
-    };
+  const down = (e: PointerEvent) => {
+    isDragging.current = true;
+    startX.current = e.clientX;
+    startY.current = e.clientY;
 
-    const move = (e: PointerEvent) => {
-      if (!isDragging.current) return;
-      gsap.set(ring, {
-        rotateY: rotationY.current + (e.clientX - startX.current) * 0.35,
-        rotateX: rotationX.current - (e.clientY - startY.current) * 0.35,
-      });
-    };
+    rotationY.current = gsap.getProperty(ring, "rotateY") as number;
+    rotationX.current = gsap.getProperty(ring, "rotateX") as number;
 
-    const up = () => (isDragging.current = false);
+    ring.setPointerCapture(e.pointerId);
+  };
 
-    ring.addEventListener("pointerdown", down);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+  const move = (e: PointerEvent) => {
+    if (!isDragging.current) return;
 
-    return () => {
-      ring.removeEventListener("pointerdown", down);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-  }, []);
+    gsap.set(ring, {
+      rotateY: rotationY.current + (e.clientX - startX.current) * 0.35,
+      rotateX: rotationX.current - (e.clientY - startY.current) * 0.25,
+    });
+  };
+
+  const up = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+
+    // 🔥 RESET tilt when user stops touching
+    resetTilt();
+  };
+
+  ring.addEventListener("pointerdown", down);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+
+  return () => {
+    ring.removeEventListener("pointerdown", down);
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+  };
+}, [step]);
+
 
   /* ---------- Buttons ---------- */
   const next = () => {
@@ -155,6 +175,7 @@ export default function Slider() {
     <section id="task1" ref={containerRef} className="min-h-screen flex flex-col items-center justify-center overflow-hidden bg-white">
       <div className="flex items-center"> 
         <h1 className="
+        text-black
   text-2xl        /* mobile */
   sm:text-3xl     /* small screens */
   md:text-4xl     /* tablets */

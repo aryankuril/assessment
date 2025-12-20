@@ -183,7 +183,7 @@ const activateCard = (i: number) => {
 
   return (
     <section id="task2" className="min-h-screen w-full flex flex-col items-center justify-center bg-white ">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-30">
+      <h1 className=" text-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-30">
         Task 2
       </h1>
 

@@ -19,7 +19,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
   return (
     <div id="task45" className="container py-0 sm:py-15 lg:py-20">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-10">
+        <h1 className=" text-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-10">
         Task 4&5
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -39,8 +39,8 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 className="h-48 w-full object-cover rounded"
               />
 
-              <h2 className="mt-2 font-semibold">{product.title}</h2>
-              <p>₹{product.priceRange.minVariantPrice.amount}</p>
+              <h2 className="mt-2 font-semibold  text-black">{product.title}</h2>
+              <p className=" text-black">₹{product.priceRange.minVariantPrice.amount}</p>
             </Link>
           </ThreeDElement>
         ))}
