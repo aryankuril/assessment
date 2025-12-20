@@ -18,6 +18,8 @@ const images = [
 ];
 
 export default function Scattered3DCards() {
+    const worldRef = useRef<HTMLDivElement>(null);
+
   const sectionRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
 
@@ -26,35 +28,35 @@ export default function Scattered3DCards() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      /* ================= SCATTER POSITIONS ================= */
-      const scatterPositions = [
-        { x: vw * 0.6, y: 0 },          // right
-        { x: -vw * 0.6, y: 0 },         // left
-        { x: 0, y: -vh * 0.5 },         // top
-        { x: 0, y: vh * 0.5 },          // bottom
-        { x: vw * 0.45, y: -vh * 0.35 }, // right-top
-        { x: -vw * 0.45, y: -vh * 0.35 },// left-top
-        { x: vw * 0.45, y: vh * 0.35 },  // right-bottom
-        { x: -vw * 0.45, y: vh * 0.35 }, // left-bottom
+      /* ========= ENTRY DIRECTIONS (ORDERED) ========= */
+      const entryDirections = [
+        { x: vw * 0.7, y: 0 },   // RIGHT
+        { x: 0, y: -vh * 0.6 },  // TOP
+        { x: -vw * 0.7, y: 0 },  // LEFT
+        { x: 0, y: vh * 0.6 },   // BOTTOM
       ];
 
-      const layout = images.map((_, i) => {
-        const pos = scatterPositions[i % scatterPositions.length];
-        return {
-          x: pos.x,
-          y: pos.y,
-          z: -300 - i * 120,
-          rotateX: gsap.utils.random(-15, 15),
-          rotateY: gsap.utils.random(-25, 25),
-          scale: 0.85,
-        };
-      });
+      /* ========= BACKGROUND SCATTER ========= */
+      const backgroundScatter = [
+        { x: vw * 0.45, y: -vh * 0.35 },
+        { x: -vw * 0.45, y: -vh * 0.35 },
+        { x: vw * 0.45, y: vh * 0.35 },
+        { x: -vw * 0.45, y: vh * 0.35 },
+      ];
 
-      /* ================= INITIAL ================= */
+      const layout = images.map((_, i) => ({
+        ...backgroundScatter[i % backgroundScatter.length],
+        z: -300 - i * 120,
+        rotateX: gsap.utils.random(-15, 15),
+        rotateY: gsap.utils.random(-25, 25),
+        scale: 0.85,
+      }));
+
+      /* ========= INITIAL STATE ========= */
       cardsRef.current.forEach((card, i) => {
         gsap.set(card, {
           ...layout[i],
-          opacity: i === 0 ? 1 : 0.5,
+          opacity: i === 0 ? 1 : 0.4,
           zIndex: i === 0 ? 20 : 1,
           force3D: true,
           transformPerspective: 1400,
@@ -64,19 +66,29 @@ export default function Scattered3DCards() {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top top",
+          start: "top+=5 top",
           end: `+=${images.length * 120}%`,
           scrub: 1,
           pin: true,
         },
       });
 
-      /* ================= DIRECTIONAL ROTATION ================= */
-      for (let active = 0; active < images.length - 1; active++) {
-        const from = layout[active];
 
-        const dirX = gsap.utils.clamp(-1, 1, from.x / vw);
-        const dirY = gsap.utils.clamp(-1, 1, from.y / vh);
+      gsap.set(cardsRef.current[0], {
+  x: 0,
+  y: 0,
+  z: 0,
+  rotateX: 0,
+  rotateY: 0,
+  scale: 1,
+  opacity: 1,
+  zIndex: 30,
+});
+
+
+      /* ========= MAIN SEQUENCE ========= */
+      for (let active = 0; active < images.length - 1; active++) {
+        const entry = entryDirections[active % entryDirections.length];
 
         tl.to(
           cardsRef.current,
@@ -84,34 +96,66 @@ export default function Scattered3DCards() {
             x: (i) =>
               i === active + 1
                 ? 0
-                : layout[(i - active - 1 + images.length) % images.length].x +
-                  dirX * 120,
+                : layout[(i - active - 1 + images.length) % images.length].x,
 
             y: (i) =>
               i === active + 1
                 ? 0
-                : layout[(i - active - 1 + images.length) % images.length].y +
-                  dirY * 120,
+                : layout[(i - active - 1 + images.length) % images.length].y,
 
             z: (i) =>
               i === active + 1
                 ? 0
                 : layout[(i - active - 1 + images.length) % images.length].z,
 
-            rotateX: (i) =>
-              i === active + 1 ? 0 : from.rotateX,
-            rotateY: (i) =>
-              i === active + 1 ? 0 : from.rotateY,
+            rotateX: (i) => (i === active + 1 ? 0 : layout[i].rotateX),
+            rotateY: (i) => (i === active + 1 ? 0 : layout[i].rotateY),
 
             scale: (i) => (i === active + 1 ? 1 : 0.85),
-            opacity: (i) => (i === active + 1 ? 1 : 0.4),
+            opacity: (i) => (i === active + 1 ? 1 : 0.35),
             zIndex: (i) => (i === active + 1 ? 20 : 1),
 
-            duration: 1,
             ease: "power3.inOut",
+            duration: 0.4,
           },
           active
         );
+
+        /* ========= ENTRY MOTION ========= */
+        tl.fromTo(
+          cardsRef.current[active + 1],
+          {
+            x: entry.x,
+            y: entry.y,
+            z: 400,
+            rotateX: -25,
+            rotateY: 25,
+            scale: 0.7,
+            opacity: 0,
+             duration: 0.4,
+             
+          },
+          {
+            x: 0,
+            y: 0,
+            z: 0,
+            rotateX: 0,
+            rotateY: 0,
+            scale: 1,
+            opacity: 1,
+            ease: "power4.out",
+            duration: 1,
+          },
+          active
+        );
+
+
+
+
+
+
+        
+        
       }
     }, sectionRef);
 
@@ -119,32 +163,46 @@ export default function Scattered3DCards() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center"
-      style={{ perspective: "1400px" }}
-    >
-      {images.map((img, i) => (
-        <div
-          key={i}
-          ref={(el) => {
-            if (el) cardsRef.current[i] = el;
-          }}
-          className="absolute w-[220px] sm:w-[260px] md:w-[300px] aspect-square rounded-xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.6)]"
-          style={{
-            transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden",
-          }}
-        >
-          <Image
-            src={img.src}
-            alt={`card-${i}`}
-            fill
-            className="object-cover"
-            priority={i === 0}
-          />
-        </div>
-      ))}
-    </section>
+<section id="task45"
+  ref={sectionRef}
+  className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center lg:-mt-20"
+  style={{ perspective: "1400px" }}
+>
+     {/* <h1 className=" text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center pb-30">
+        Task 3
+      </h1> */}
+  <div
+    ref={worldRef}
+    className="absolute inset-0 flex items-center justify-center"
+    style={{
+      transformStyle: "preserve-3d",
+    }}
+  >
+    {images.map((img, i) => (
+      <div
+        key={i}
+
+        ref={(el) => {
+  if (el) cardsRef.current[i] = el;
+}}
+
+        className="absolute w-[220px] sm:w-[260px] md:w-[300px] aspect-square rounded-xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.6)]"
+        style={{
+          transformStyle: "preserve-3d",
+          backfaceVisibility: "hidden",
+        }}
+      >
+        <Image
+          src={img.src}
+          alt={`card-${i}`}
+          fill
+          className="object-cover"
+          priority={i === 0}
+        />
+      </div>
+    ))}
+  </div>
+</section>
+
   );
 }

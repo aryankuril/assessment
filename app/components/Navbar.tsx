@@ -2,24 +2,28 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 type NavItem = {
-  id: string;
+  href: string;
   label: string;
 };
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>("task1");
 
-  /* ---------------- NAV ITEMS ---------------- */
+  const pathname = usePathname();
+  const router = useRouter();
+
+  /* ---------------- NAV ITEMS (ROUTES) ---------------- */
   const navItems: NavItem[] = [
-    { id: "task1", label: "Task1" },
-    { id: "task2", label: "Task2" },
-    { id: "task3", label: "Task3" },
-    { id: "task45", label: "Task4&5" },
+    { href: "/task1", label: "Task1" },
+    { href: "/task2", label: "Task2" },
+    { href: "/task3", label: "Task3" },
+    { href: "/task45", label: "Task4&5" },
   ];
 
   /* ---------------- SCROLL SHADOW ---------------- */
@@ -29,50 +33,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ---------------- SCROLL SPY (CORE LOGIC) ---------------- */
-  useEffect(() => {
-    const sections = navItems
-      .map((item) => document.getElementById(item.id))
-      .filter(Boolean) as HTMLElement[];
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      {
-        rootMargin: "-50% 0px -50% 0px", // section hits center
-        threshold: 0,
-      }
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
-
-  /* ---------------- SCROLL TO SECTION ---------------- */
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+  /* ---------------- ROUTE NAVIGATION ---------------- */
+  const goToRoute = (href: string) => {
+    router.push(href);
     setIsOpen(false);
   };
 
   return (
     <header
       className={`sticky top-3 z-[99999] container rounded-2xl transition-all
-      ${isScrolled
-        ? "bg-[rgba(142,142,142,0.25)] backdrop-blur-md shadow-lg"
-        : "bg-[rgba(142,142,142,0.25)] backdrop-blur-md"
+      ${
+        isScrolled
+          ? "bg-[rgba(142,142,142,0.25)] backdrop-blur-md shadow-lg"
+          : "bg-[rgba(142,142,142,0.25)] backdrop-blur-md"
       }`}
     >
       <nav className="relative flex items-center lg:px-6 lg:py-5 px-3 py-3">
         {/* LOGO */}
         <div className="flex-shrink-0">
+          <Link href="/" > 
           <Image
             src="/images/bblogo.webp"
             alt="Logo"
@@ -80,20 +59,21 @@ export default function Navbar() {
             height={60}
             priority
           />
+          </Link>
         </div>
 
         {/* DESKTOP NAV (TRUE CENTER) */}
         <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-10">
           {navItems.map((item) => (
             <button
-              key={item.id}
-              onClick={() => scrollToSection(item.id)}
+              key={item.href}
+              onClick={() => goToRoute(item.href)}
               className={`relative text-black font-medium transition-all
                 after:content-[''] after:absolute after:left-0 after:-bottom-1
                 after:h-[2px] after:w-full after:bg-black
-                after:transition-transform after:duration-300
+                after:transition-transform after:duration-300 cursor-pointer
                 ${
-                  activeSection === item.id
+                  pathname === item.href
                     ? "after:scale-x-100"
                     : "after:scale-x-0"
                 }
@@ -116,13 +96,13 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       {isOpen && (
-        <div className="lg:hidden  text-black px-6 py-6 space-y-4 rounded-b-2xl">
+        <div className="lg:hidden text-black px-6 py-6 space-y-4 rounded-b-2xl">
           {navItems.map((item) => (
             <button
-              key={item.id}
-              onClick={() => scrollToSection(item.id)}
+              key={item.href}
+              onClick={() => goToRoute(item.href)}
               className={`block text-lg w-full text-left ${
-                activeSection === item.id ? "underline" : ""
+                pathname === item.href ? "underline" : ""
               }`}
             >
               {item.label}
