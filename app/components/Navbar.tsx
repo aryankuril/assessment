@@ -86,7 +86,7 @@ export default function Navbar() {
 
         {/* MOBILE MENU BUTTON */}
       <button
-  className="ml-auto lg:hidden text-black text-4xl font-bold"
+  className="ml-auto lg:hidden text-black text-3xl font-bold"
   onClick={() => setIsOpen(!isOpen)}
   aria-label="Toggle menu"
 >

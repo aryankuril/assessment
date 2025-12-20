@@ -8,13 +8,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const images = [
-{ src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg", caption: "Anton Ploom" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg", caption: "Annija Kopshtale" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg", caption: "Daria Elmakova" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg", caption: "Margaret Rodchenkova" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg", caption: "Marta Ozolina" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg", caption: "Victoria Ananyan" },
-  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg", caption: "Ekaterina Gusarova" },
+{ src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg", caption: "Anton" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg", caption: "Annija" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg", caption: "Daria" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg", caption: "Margaret" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg", caption: "Marta" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg", caption: "Victoria" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg", caption: "Ekaterina" },
   
 ]
 
@@ -179,7 +179,7 @@ useEffect(() => {
   />
 
   {/* 🔥 Caption below card */}
-  <div className="bg-transparent text-black text-xs sm:text-sm text-center ">
+  <div className="bg-transparent text-black text-xs  text-center ">
     {img.caption}
   </div>
 </div>

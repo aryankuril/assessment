@@ -179,7 +179,7 @@ const Checkout = () => {
             <span>Free</span>
           </div>
 
-          <div className="border-t-black pt-4 flex justify-between text-lg font-semibold text-black">
+          <div className="border-t pt-4 flex justify-between text-lg font-semibold text-black">
             <span>Total</span>
             <span>₹{total}</span>
           </div>
