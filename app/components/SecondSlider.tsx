@@ -8,13 +8,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const images = [
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg' },
-  { src: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg' },
+{ src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/anton-ploom.jpg", caption: "Anton Ploom" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/annija-kopstsale.jpg", caption: "Annija Kopshtale" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/daria-elmakova.jpg", caption: "Daria Elmakova" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/margaret-rodchenkova.jpg", caption: "Margaret Rodchenkova" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/marta-ozolina.jpg", caption: "Marta Ozolina" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/victoria-ananyan.jpg", caption: "Victoria Ananyan" },
+  { src: "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/ekaterina-gusarova.jpg", caption: "Ekaterina Gusarova" },
   
 ]
 
@@ -141,6 +141,8 @@ useEffect(() => {
   className="relative h-screen w-full bg-white overflow-hidden flex items-center justify-center"
 >
   {/* 🔥 Heading */}
+
+        
   <h1 className="
     absolute
     top-20
@@ -157,8 +159,6 @@ useEffect(() => {
   ">
     Task1
   </h1>
-
-        
         
       <div className="relative w-[120px] h-[180px] sm:w-[260px] sm:h-[280px] perspective-[1500px]">
         <motion.div
@@ -166,20 +166,24 @@ useEffect(() => {
           className="absolute inset-0"
           style={{
             transformStyle: 'preserve-3d',
+            touchAction: 'none',
           }}
         >
           {images.map((img, i) => (
-            <div
-              key={i}
-              className="panel absolute inset-0 overflow-hidden shadow-2xl bg-black"
-            >
-              <img
-                src={img.src}
-                alt=""
-                className="h-full w-full object-cover"
-                draggable={false}
-              />
-            </div>
+            <div className="panel absolute inset-0  flex flex-col">
+  <img
+    src={img.src}
+    alt=""
+    className="h-full w-full object-cover"
+    draggable={false}
+  />
+
+  {/* 🔥 Caption below card */}
+  <div className="bg-transparent text-black text-xs sm:text-sm text-center ">
+    {img.caption}
+  </div>
+</div>
+
           ))}
         </motion.div>
       </div>
