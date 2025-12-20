@@ -6,7 +6,9 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+// @ts-ignore
 import confetti from "canvas-confetti";
+
 
 /* ================= CONFETTI FUNCTION ================= */
 const shootConfettiFromBottom = () => {
