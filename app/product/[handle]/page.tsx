@@ -75,9 +75,9 @@ export default async function ProductPage({
 
         {/* RIGHT DETAILS */}
         <div>
-          <h1 className="text-3xl font-semibold">{product.title}</h1>
+          <h1 className="text-3xl font-semibold text-black">{product.title}</h1>
 
-          <p className="text-2xl mt-4">
+          <p className="text-2xl mt-4 text-black">
             ₹{product.priceRange.minVariantPrice.amount}
           </p>
 
@@ -93,7 +93,7 @@ export default async function ProductPage({
 
       {/* PRODUCT DESCRIPTION */}
       <div className="mt-16 w-full">
-        <h2 className="text-xl font-semibold mb-4">Product Description</h2>
+        <h2 className="text-xl font-semibold mb-4 text-black">Product Description</h2>
 
        <p className="text-gray-700 leading-relaxed mb-6">
   This product is thoughtfully crafted with a strong focus on quality, comfort, and everyday usability, making it a reliable choice for a wide range of customers. Every detail, from the selection of materials to the final finishing, has been carefully considered to ensure a balanced combination of durability and style. The fabric used in this product feels soft against the skin while still being strong enough to withstand regular wear, making it suitable for long-term use without losing its shape or appearance. Designed to feel lightweight yet substantial, it provides a comfortable experience throughout the day, whether you are wearing it for extended hours at work, during casual outings, or while relaxing at home. The overall construction reflects a premium feel that is noticeable as soon as you touch and wear it, giving you confidence that you are investing in something well-made and dependable.

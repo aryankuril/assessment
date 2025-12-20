@@ -77,13 +77,13 @@ const Checkout = () => {
   if (cart.length === 0 && !popup) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-3xl font-semibold mb-3">Your cart is empty 😕</h1>
+        <h1 className="text-3xl font-semibold mb-3 text-black">Your cart is empty 😕</h1>
         <p className="text-gray-600 mb-8">
           Please add some products before checking out.
         </p>
         <Link
           href="/"
-          className="border border-black px-8 py-3 rounded transition hover:bg-black hover:text-white"
+          className="border border-black px-8 py-3 rounded-full text-black transition hover:bg-black hover:text-white"
         >
           Browse Products
         </Link>
@@ -93,7 +93,7 @@ const Checkout = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-semibold mb-10">Checkout</h1>
+      <h1 className="text-3xl font-semibold mb-10 text-black">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* LEFT: PRODUCTS */}
@@ -114,7 +114,7 @@ const Checkout = () => {
 
               {/* DETAILS */}
               <div className="flex-1 flex flex-col">
-                <h2 className="font-medium text-lg">{item.title}</h2>
+                <h2 className="font-medium text-lg text-black">{item.title}</h2>
                 <p className="text-gray-600 mt-1">₹{item.price}</p>
 
                 {/* Quantity on mobile */}
@@ -124,16 +124,16 @@ const Checkout = () => {
                       onClick={() =>
                         updateQty(item.id, Math.max(1, item.qty - 1))
                       }
-                      className="text-xl font-medium"
+                      className="text-xl font-medium text-black"
                     >
                       −
                     </button>
-                    <span className="min-w-[20px] text-center font-medium">
+                    <span className="min-w-[20px] text-center font-medium text-black">
                       {item.qty}
                     </span>
                     <button
                       onClick={() => updateQty(item.id, item.qty + 1)}
-                      className="text-xl font-medium"
+                      className="text-xl font-medium text-black"
                     >
                       +
                     </button>
@@ -147,16 +147,16 @@ const Checkout = () => {
                   onClick={() =>
                     updateQty(item.id, Math.max(1, item.qty - 1))
                   }
-                  className="text-xl font-medium cursor-pointer"
+                  className="text-xl font-medium cursor-pointer text-black"
                 >
                   −
                 </button>
-                <span className="min-w-[20px] text-center font-medium">
+                <span className="min-w-[20px] text-center font-medium text-black">
                   {item.qty}
                 </span>
                 <button
                   onClick={() => updateQty(item.id, item.qty + 1)}
-                  className="text-xl font-medium cursor-pointer"
+                  className="text-xl font-medium cursor-pointer text-black"
                 >
                   +
                 </button>
@@ -167,7 +167,7 @@ const Checkout = () => {
 
         {/* RIGHT: SUMMARY */}
         <div className="border rounded-xl p-6 h-fit">
-          <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+          <h2 className="text-xl font-semibold mb-6 text-black">Order Summary</h2>
 
           <div className="flex justify-between text-gray-600 mb-4">
             <span>Subtotal</span>
@@ -179,7 +179,7 @@ const Checkout = () => {
             <span>Free</span>
           </div>
 
-          <div className="border-t pt-4 flex justify-between text-lg font-semibold">
+          <div className="border-t pt-4 flex justify-between text-lg font-semibold text-black">
             <span>Total</span>
             <span>₹{total}</span>
           </div>

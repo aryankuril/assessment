@@ -11,14 +11,14 @@ const Cart = () => {
   if (cart.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-3xl font-semibold mb-3">Your cart is empty 😕</h1>
+        <h1 className="text-3xl font-semibold mb-3 text-black">Your cart is empty 😕</h1>
         <p className="text-gray-600 mb-8">
           Looks like you haven’t added anything yet.
         </p>
 
         <Link
           href="/"
-          className="border border-black px-8 py-3 rounded transition hover:bg-black hover:text-white"
+          className="border border-black px-8 py-3 rounded-full transition hover:bg-black hover:text-white text-black"
         >
           Browse Products
         </Link>
@@ -28,7 +28,7 @@ const Cart = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-semibold mb-10">Your Cart</h1>
+      <h1 className="text-3xl font-semibold mb-10 text-black">Your Cart</h1>
 
       {/* CART ITEMS */}
       <div className="space-y-6">
@@ -49,7 +49,7 @@ const Cart = () => {
 
             {/* DETAILS */}
            <div className="flex-1 flex flex-col">
-  <h2 className="font-medium text-lg">{item.title}</h2>
+  <h2 className="font-medium text-lg text-black">{item.title}</h2>
   <p className="text-gray-600 mt-1">₹{item.price}</p>
 
   {/* Quantity BELOW price on mobile */}
@@ -59,18 +59,18 @@ const Cart = () => {
         onClick={() =>
           updateQty(item.id, Math.max(1, item.qty - 1))
         }
-        className="text-xl font-medium"
+        className="text-xl font-medium text-black"
       >
         −
       </button>
 
-      <span className="min-w-[20px] text-center font-medium">
+      <span className="min-w-[20px] text-center font-medium text-black">
         {item.qty}
       </span>
 
       <button
         onClick={() => updateQty(item.id, item.qty + 1)}
-        className="text-xl font-medium"
+        className="text-xl font-medium text-black"
       >
         +
       </button>
@@ -85,18 +85,18 @@ const Cart = () => {
                 onClick={() =>
                   updateQty(item.id, Math.max(1, item.qty - 1))
                 }
-                className="text-xl font-medium cursor-pointer"
+                className="text-xl font-medium cursor-pointer text-black"
               >
                 −
               </button>
 
-              <span className="min-w-[20px] text-center font-medium">
+              <span className="min-w-[20px] text-center font-medium text-black">
                 {item.qty}
               </span>
 
               <button
                 onClick={() => updateQty(item.id, item.qty + 1)}
-                className="text-xl font-medium cursor-pointer"
+                className="text-xl font-medium cursor-pointer text-black"
               >
                 +
               </button>
@@ -105,7 +105,7 @@ const Cart = () => {
             {/* REMOVE */}
             <button
               onClick={() => removeItem(item.id)}
-              className="ml-2 text-xl hover:scale-110 transition"
+              className="ml-2 text-xl hover:scale-110 transition text-black"
               aria-label="Remove item"
             >
               ❌
@@ -116,13 +116,13 @@ const Cart = () => {
 
       {/* TOTAL + CHECKOUT */}
       <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <h2 className="text-2xl font-semibold">
+        <h2 className="text-2xl font-semibold text-black">
           Total: ₹{total}
         </h2>
 
         <Link
           href="/checkout"
-          className="border border-black px-10 py-3 rounded-full text-center transition hover:bg-black hover:text-white"
+          className="border border-black px-10 py-3 rounded-full text-center transition hover:bg-black hover:text-white text-black"
         >
           Proceed to Checkout
         </Link>
