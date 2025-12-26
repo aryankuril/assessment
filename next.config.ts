@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+
+     domains: [
+      "cdn.shopify.com", // ✅ allow Shopify images
+    ],
     remotePatterns: [
       {
         protocol: "https",

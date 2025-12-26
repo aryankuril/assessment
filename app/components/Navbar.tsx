@@ -52,13 +52,15 @@ export default function Navbar() {
         {/* LOGO */}
         <div className="flex-shrink-0">
           <Link href="/" > 
-          <Image
-            src="/images/bblogo.webp"
-            alt="Logo"
-            width={220}
-            height={60}
-            priority
-          />
+         <Image
+  src="/images/bblogo.webp"
+  alt="Logo"
+  width={180}
+  height={60}
+  priority
+  className="h-auto w-auto"
+/>
+
           </Link>
         </div>
 

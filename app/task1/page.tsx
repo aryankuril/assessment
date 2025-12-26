@@ -1,12 +1,12 @@
 import React from 'react'
-import Slider3d from '../components/Slider'
-import SecondSlider from '../components/SecondSlider'
+
+import Scroll3DRotation from '../components/Scroll3DRotation'
 
 const Index = () => {
   return (
     <div>
-        {/* <Slider3d/> */}
-        <SecondSlider/>
+
+        <Scroll3DRotation/>
     </div>
   )
 }

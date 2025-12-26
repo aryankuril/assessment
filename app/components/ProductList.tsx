@@ -1,6 +1,8 @@
 import { shopifyFetch } from "@/lib/shopify";
 import ProductGrid from "./ProductGrid";
 
+export const revalidate = 60; // ✅ caching, NO UI impact
+
 type Product = {
   id: string;
   title: string;

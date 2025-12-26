@@ -6,34 +6,28 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 // @ts-ignore
 import confetti from "canvas-confetti";
-
 
 /* ================= CONFETTI FUNCTION ================= */
 const shootConfettiFromBottom = () => {
   const duration = 2000;
   const end = Date.now() + duration;
 
-//   const colors = ["#000000", "#ffffff"];
-
   (function frame() {
-    // Bottom Left
     confetti({
       particleCount: 6,
       angle: 60,
       spread: 55,
       origin: { x: 0, y: 1 },
-    //   colors,
     });
 
-    // Bottom Right
     confetti({
       particleCount: 6,
       angle: 120,
       spread: 55,
       origin: { x: 1, y: 1 },
-    //   colors,
     });
 
     if (Date.now() < end) {
@@ -53,36 +47,43 @@ const Checkout = () => {
   const handlePayment = async (status: "success" | "failed") => {
     if (cart.length === 0) return;
 
-    await addDoc(collection(db, "orders"), {
-      user: "guest",
-      cart,
-      total,
-      paymentStatus: status,
-      createdAt: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, "orders"), {
+        user: "guest",
+        cart,
+        total,
+        paymentStatus: status,
+        createdAt: serverTimestamp(),
+      });
 
-    if (status === "success") {
-      clearCart();
-      shootConfettiFromBottom(); // 🎉 CONFETTI ONLY ON SUCCESS
+      if (status === "success") {
+        clearCart();
+        shootConfettiFromBottom();
+      }
+
+      setPopup(status);
+
+      setTimeout(() => {
+        router.push("/task45");
+      }, 3000);
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      setPopup("failed");
     }
-
-    setPopup(status);
-
-    setTimeout(() => {
-      router.push("/task45");
-    }, 3000);
   };
 
   // EMPTY STATE
   if (cart.length === 0 && !popup) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-3xl font-semibold mb-3 text-black">Your cart is empty 😕</h1>
+        <h1 className="text-3xl font-semibold mb-3 text-black">
+          Your cart is empty 😕
+        </h1>
         <p className="text-gray-600 mb-8">
           Please add some products before checking out.
         </p>
         <Link
-          href="/"
+          href="/task45"
           className="border border-black px-8 py-3 rounded-full text-black transition hover:bg-black hover:text-white"
         >
           Browse Products
@@ -98,76 +99,86 @@ const Checkout = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* LEFT: PRODUCTS */}
         <div className="lg:col-span-2 space-y-6">
-          {cart.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-6 border border-black rounded-xl p-5"
-            >
-              {/* IMAGE */}
-              <div className="w-24 h-24 rounded-lg overflow-hidden border bg-gray-100">
-                <img
-                  src={item.image || "/placeholder.png"}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          {cart.map((item) => {
+            const imageUrl = item.image || "/placeholder.png";
 
-              {/* DETAILS */}
-              <div className="flex-1 flex flex-col">
-                <h2 className="font-medium text-lg text-black">{item.title}</h2>
-                <p className="text-gray-600 mt-1">₹{item.price}</p>
+            return (
+              <div
+                key={item.id}
+                className="flex items-center gap-6 border border-black rounded-xl p-5"
+              >
+                {/* IMAGE (UI SAME) */}
+                <div className="w-24 h-24 rounded-lg overflow-hidden border bg-gray-100 relative">
+                  <Image
+                    src={imageUrl}
+                    alt={item.title}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                </div>
 
-                {/* Quantity on mobile */}
-                <div className="mt-2 sm:hidden">
-                  <div className="inline-flex items-center border border-black rounded-full px-3 py-1 gap-4">
-                    <button
-                      onClick={() =>
-                        updateQty(item.id, Math.max(1, item.qty - 1))
-                      }
-                      className="text-xl font-medium text-black"
-                    >
-                      −
-                    </button>
-                    <span className="min-w-[20px] text-center font-medium text-black">
-                      {item.qty}
-                    </span>
-                    <button
-                      onClick={() => updateQty(item.id, item.qty + 1)}
-                      className="text-xl font-medium text-black"
-                    >
-                      +
-                    </button>
+                {/* DETAILS */}
+                <div className="flex-1 flex flex-col">
+                  <h2 className="font-medium text-lg text-black">
+                    {item.title}
+                  </h2>
+                  <p className="text-gray-600 mt-1">₹{item.price}</p>
+
+                  {/* Quantity on mobile */}
+                  <div className="mt-2 sm:hidden">
+                    <div className="inline-flex items-center border border-black rounded-full px-3 py-1 gap-4">
+                      <button
+                        onClick={() =>
+                          updateQty(item.id, Math.max(1, item.qty - 1))
+                        }
+                        className="text-xl font-medium text-black"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[20px] text-center font-medium text-black">
+                        {item.qty}
+                      </span>
+                      <button
+                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        className="text-xl font-medium text-black"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quantity desktop */}
-              <div className="hidden sm:flex items-center border border-black rounded-full px-3 py-1 gap-4">
-                <button
-                  onClick={() =>
-                    updateQty(item.id, Math.max(1, item.qty - 1))
-                  }
-                  className="text-xl font-medium cursor-pointer text-black"
-                >
-                  −
-                </button>
-                <span className="min-w-[20px] text-center font-medium text-black">
-                  {item.qty}
-                </span>
-                <button
-                  onClick={() => updateQty(item.id, item.qty + 1)}
-                  className="text-xl font-medium cursor-pointer text-black"
-                >
-                  +
-                </button>
+                {/* Quantity desktop */}
+                <div className="hidden sm:flex items-center border border-black rounded-full px-3 py-1 gap-4">
+                  <button
+                    onClick={() =>
+                      updateQty(item.id, Math.max(1, item.qty - 1))
+                    }
+                    className="text-xl font-medium cursor-pointer text-black"
+                  >
+                    −
+                  </button>
+                  <span className="min-w-[20px] text-center font-medium text-black">
+                    {item.qty}
+                  </span>
+                  <button
+                    onClick={() => updateQty(item.id, item.qty + 1)}
+                    className="text-xl font-medium cursor-pointer text-black"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* RIGHT: SUMMARY */}
         <div className="border border-black rounded-xl p-6 h-fit">
-          <h2 className="text-xl font-semibold mb-6 text-black">Order Summary</h2>
+          <h2 className="text-xl font-semibold mb-6 text-black">
+            Order Summary
+          </h2>
 
           <div className="flex justify-between text-gray-600 mb-4">
             <span>Subtotal</span>
