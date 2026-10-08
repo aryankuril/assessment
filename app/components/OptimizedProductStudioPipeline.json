@@ -1,0 +1,817 @@
+{
+  "name": "Clothing Product Automation - Full Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clothing-automation",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "717737f5-f5b8-4346-a878-d54eb435b756",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "clothing-automation",
+      "notes": "Expects POST body: { image_url, file_id, gender_hint }"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.file_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "9fd2fe70-c5a5-48dd-a651-855af44f5502",
+      "name": "Google Drive - Download Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        240,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mcp.higgsfield.ai/mcp/media/upload",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HIGGSFIELD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={ \"file_name\": \"garment.jpg\", \"content_type\": \"image/jpeg\" }"
+      },
+      "id": "ca346dde-a121-43b0-99a9-ab4fa5eafb9c",
+      "name": "HF - Step 1 Get Upload URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $node['HF - Step 1 Get Upload URL'].json.upload_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data"
+      },
+      "id": "59021bd8-4f34-4f20-aa7f-c1fdfd3e0a13",
+      "name": "HF - Step 2 PUT Binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mcp.higgsfield.ai/mcp/media/confirm",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HIGGSFIELD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={ \"media_id\": \"{{ $node[\\\"HF - Step 1 Get Upload URL\\\"].json.media_id }}\" }"
+      },
+      "id": "76ab9c15-a395-4a7a-b963-55d344fe6bfe",
+      "name": "HF - Step 3 Confirm Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.2,\n  \"system\": \"You are a fashion product classifier. Analyze the provided garment image and return ONLY valid JSON, no prose, no markdown fences.\\n\\nDetect and output:\\n- category: Topwear | Bottomwear | Dress | Outerwear | Innerwear | Activewear | Loungewear | Ethnic | Accessories | Footwear\\n- subcategory: specific type (e.g. T-Shirt, Polo, Shirt, Jeans, Chinos, Joggers, Shorts, Kurta, Frock, Hoodie, Sweatshirt, Jacket, Skirt, Co-ord Set)\\n- garment_type: descriptive label combining cut + style (e.g. \\\"oversized graphic t-shirt\\\")\\n- gender: Men | Women | Boys | Girls\\n- age_group: Adult | Kids (4-7) | Kids (8-12) | Teen\\n- confidence: float 0.0\\u20131.0\\n\\nOutput schema:\\n{\\\"category\\\":\\\"\\\",\\\"subcategory\\\":\\\"\\\",\\\"garment_type\\\":\\\"\\\",\\\"gender\\\":\\\"\\\",\\\"age_group\\\":\\\"\\\",\\\"confidence\\\":0.0}\",\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": [\n      {\"type\": \"image\", \"source\": {\"type\": \"url\", \"url\": \"={{ $node[\\\"Webhook\\\"].json.body.image_url }}\"}},\n      {\"type\": \"text\", \"text\": \"={{ \\\"Client gender hint: \\\" + $node[\\\"Webhook\\\"].json.body.gender_hint }}\"}\n    ]\n  }]\n}"
+      },
+      "id": "71ff8b97-8927-4dd4-9b10-71f9cd7f73a0",
+      "name": "Claude - B1 Classify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst presetMap = {\n  'Men':   'adult male model, age 25-32, athletic-lean build, short dark hair, clean-shaven or light stubble, neutral confident expression',\n  'Women': 'adult female model, age 22-30, slim build, shoulder-length hair, minimal makeup, neutral pleasant expression',\n  'Boys':  'young male child model, age 8-11, average build, neat short hair, friendly neutral expression',\n  'Girls': 'young female child model, age 8-11, average build, neat shoulder-length hair, friendly neutral expression'\n};\n\nconst sharedBase = \"Professional e-commerce studio photograph. STRICT FULL BODY SHOT \u2014 entire model visible from the top of the head to the soles of the feet, with comfortable margin above the head and below the feet. No cropping of head, hair, hands, or feet. Square 1:1 framing. Plain seamless backdrop in soft cream / off-white / warm-white tone. Soft diffused even studio lighting, no harsh shadows, no color cast on the garment. Photorealistic, sharp focus on the garment, accurate color reproduction, natural skin tone, high resolution catalog quality. The garment must match the reference image exactly \u2014 same color, pattern, cut, fabric texture, stitching, and all design details. No logos or text added that are not in the reference. No accessories added.\";\n\nconst raw = $node['Claude - B1 Classify'].json.content.find(b => b.type === 'text').text;\nconst classification = JSON.parse(raw.replace(/```json|```/g, '').trim());\nconst preset = presetMap[classification.gender] || presetMap['Men'];\n\nconst frontPrompt = `${preset} wearing the exact garment from the reference image. STRICT FULL BODY SHOT, head to toe, entire body visible including full head and both feet, model centered in frame, facing camera directly, neutral standing pose, feet shoulder-width apart, arms relaxed naturally at sides. Eyes looking at camera. ${sharedBase}`;\nconst sidePrompt = `Same model and same garment as the front shot \u2014 preserve identity, skin tone, hair, and garment exactly. STRICT FULL BODY SHOT in 90-degree side profile, head to toe, entire body visible including full head and both feet, model turned to their left so the camera sees their right side, natural relaxed standing pose, arms at sides, head facing forward in profile. Focus on garment silhouette, drape, and fit from the side. ${sharedBase}`;\nconst backPrompt = `Same model and same garment as the front and side shots \u2014 preserve identity and garment exactly. STRICT FULL BODY back view, head to toe, entire body visible including full head and both feet, model facing directly away from camera, natural standing pose, arms relaxed at sides. Focus on rear garment design, back graphics or prints, stitching, yoke, hood, and overall rear fit. ${sharedBase}`;\n\nreturn [{ json: { classification, model_preset: preset, front_prompt: frontPrompt, side_prompt: sidePrompt, back_prompt: backPrompt, confirmed_media_id: $node['HF - Step 3 Confirm Upload'].json.media_id, raw_image_url: $node['Webhook'].json.body.image_url, gender_hint: $node['Webhook'].json.body.gender_hint } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "649f118d-fb33-4b2b-82f3-a2b4b5d05d38",
+      "name": "Code - Parse B1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.HIGGSFIELD_GENERATION_ENDPOINT }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HIGGSFIELD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"nano_banana_pro\",\n  \"prompt\": \"={{ $node[\\\"Code - Parse B1\\\"].json.front_prompt }}\",\n  \"aspect_ratio\": \"1:1\",\n  \"count\": 1,\n  \"medias\": [\n    {\n      \"value\": \"={{ $node[\\\"Code - Parse B1\\\"].json.confirmed_media_id }}\",\n      \"role\": \"image\"\n    }\n  ]\n}"
+      },
+      "id": "e7ff5f4c-c63c-4af1-9e90-f15fad6ea239",
+      "name": "HF - Generate Front",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.HIGGSFIELD_GENERATION_ENDPOINT }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HIGGSFIELD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"nano_banana_pro\",\n  \"prompt\": \"={{ $node[\\\"Code - Parse B1\\\"].json.side_prompt }}\",\n  \"aspect_ratio\": \"1:1\",\n  \"count\": 1,\n  \"medias\": [\n    {\n      \"value\": \"={{ $node[\\\"Code - Parse B1\\\"].json.confirmed_media_id }}\",\n      \"role\": \"image\"\n    }\n  ]\n}"
+      },
+      "id": "456e409b-5f41-4011-b745-709274dd26bf",
+      "name": "HF - Generate Side",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.HIGGSFIELD_GENERATION_ENDPOINT }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HIGGSFIELD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"nano_banana_pro\",\n  \"prompt\": \"={{ $node[\\\"Code - Parse B1\\\"].json.back_prompt }}\",\n  \"aspect_ratio\": \"1:1\",\n  \"count\": 1,\n  \"medias\": [\n    {\n      \"value\": \"={{ $node[\\\"Code - Parse B1\\\"].json.confirmed_media_id }}\",\n      \"role\": \"image\"\n    }\n  ]\n}"
+      },
+      "id": "dd3f225d-3987-44f5-ae05-9e5ddd3f2140",
+      "name": "HF - Generate Back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst prev = $node['Code - Parse B1'].json;\nreturn [{\n  json: {\n    ...prev,\n    front_image_url: $node['HF - Generate Front'].json.results?.[0]?.url || $node['HF - Generate Front'].json.image_url || '',\n    side_image_url:  $node['HF - Generate Side'].json.results?.[0]?.url  || $node['HF - Generate Side'].json.image_url  || '',\n    back_image_url:  $node['HF - Generate Back'].json.results?.[0]?.url  || $node['HF - Generate Back'].json.image_url  || ''\n  }\n}];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "9daffaab-c6e8-4236-9c91-38d9c9ece088",
+      "name": "Code - Store Image URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.2,\n  \"system\": \"You are a fashion attribute extraction engine. Inspect the garment in the provided images and return ONLY valid JSON.\\n\\nFields:\\n- primary_color, secondary_colors[]\\n- pattern: Solid|Striped|Checked|Printed|Graphic|Floral|Color-block|Embroidered|Tie-dye|Abstract|Other\\n- fabric_guess: Cotton|Polyester|Denim|Linen|Wool|Blend|Knit|Fleece|Viscose|etc\\n- fit: Slim|Regular|Relaxed|Oversized|Loose|Skinny|Straight|Tapered\\n- sleeve_length: Sleeveless|Short|Half|Three-quarter|Full|N/A\\n- neckline: Crew|V-neck|Polo|Collared|Round|Boat|Henley|Mandarin|Hooded|N/A\\n- length: Cropped|Regular|Long|Knee|Midi|Maxi|Above-knee|Ankle|N/A\\n- closure: Pullover|Button|Zip|Drawstring|Elastic|Hook|N/A\\n- design_details: array of notable details\\n- occasion: array from [Casual,Formal,Semi-formal,Party,Sports,Festive,Daily,Loungewear]\\n- season: array from [Summer,Winter,Monsoon,All-season]\\n\\nDo not invent details not visible. Return ONLY valid JSON.\",\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": [\n      {\"type\": \"image\", \"source\": {\"type\": \"url\", \"url\": \"={{ $node[\\\"Code - Store Image URLs\\\"].json.front_image_url }}\"}},\n      {\"type\": \"image\", \"source\": {\"type\": \"url\", \"url\": \"={{ $node[\\\"Code - Store Image URLs\\\"].json.back_image_url }}\"}},\n      {\"type\": \"text\", \"text\": \"={{ \\\"Classification context: \\\" + JSON.stringify($node[\\\"Code - Store Image URLs\\\"].json.classification) }}\"}\n    ]\n  }]\n}"
+      },
+      "id": "72cbdb13-bc65-42ca-bab2-472044ac243c",
+      "name": "Claude - B2 Attributes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst raw = $node['Claude - B2 Attributes'].json.content.find(b => b.type === 'text').text;\nconst attributes = JSON.parse(raw.replace(/```json|```/g, '').trim());\nreturn [{ json: { ...($node['Code - Parse B1'].json), attributes } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "d84af61b-86da-47f7-8cda-3cd0551d5139",
+      "name": "Code - Parse B2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.6,\n  \"system\": \"You are an e-commerce copywriter. Return ONLY valid JSON.\\n\\nProduce:\\n- title: 60-80 chars. Formula: [Gender] + [Color] + [Pattern/Style] + [Subcategory]. No brand name.\\n- short_description: ONE punchy sentence, 120-160 chars, benefit-led, no clich\\u00e9s.\\n- long_description: 80-120 words. Fabric feel, fit, styling occasions, key design details. No filler phrases.\\n- bullet_highlights: exactly 5 bullets, max 8 words each \\u2014 fit, fabric, design, occasion, care.\\n\\nTone: clean, modern, confident, factual. No superlatives. No emoji.\\n\\nSchema: {\\\"title\\\":\\\"\\\",\\\"short_description\\\":\\\"\\\",\\\"long_description\\\":\\\"\\\",\\\"bullet_highlights\\\":[\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"\\\"]}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"={{ \\\"Classification: \\\" + JSON.stringify($node[\\\"Code - Parse B2\\\"].json.classification) + \\\"\\\\nAttributes: \\\" + JSON.stringify($node[\\\"Code - Parse B2\\\"].json.attributes) }}\"}]\n}"
+      },
+      "id": "112c3b5c-0400-4469-ac25-a5c48de5aea2",
+      "name": "Claude - B3 Title Desc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst raw = $node['Claude - B3 Title Desc'].json.content.find(b => b.type === 'text').text;\nconst content = JSON.parse(raw.replace(/```json|```/g, '').trim());\nreturn [{ json: { ...($node['Code - Parse B2'].json), content } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "9b8b27ea-b819-4d1c-81f8-8ad8f3ed2a3c",
+      "name": "Code - Parse B3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.2,\n  \"system\": \"You are a product variant mapper. Return ONLY valid JSON.\\n\\nSizing rules:\\n- Adult Topwear/Dress/Outerwear: [\\\"XS\\\",\\\"S\\\",\\\"M\\\",\\\"L\\\",\\\"XL\\\",\\\"XXL\\\"]\\n- Adult Bottomwear rigid (jeans/chinos): [\\\"28\\\",\\\"30\\\",\\\"32\\\",\\\"34\\\",\\\"36\\\",\\\"38\\\",\\\"40\\\"]\\n- Adult Bottomwear elastic (joggers/tracks): [\\\"S\\\",\\\"M\\\",\\\"L\\\",\\\"XL\\\",\\\"XXL\\\"]\\n- Kids (4-7): [\\\"4Y\\\",\\\"5Y\\\",\\\"6Y\\\",\\\"7Y\\\"]\\n- Kids (8-12): [\\\"8Y\\\",\\\"9Y\\\",\\\"10Y\\\",\\\"11Y\\\",\\\"12Y\\\"]\\n- Footwear: return empty available_sizes\\n\\nColor variants: detected primary color first, then 3-5 common alternates realistic for this garment.\\n\\nOutput: {\\\"available_sizes\\\":[],\\\"color_variants\\\":[],\\\"size_chart_type\\\":\\\"\\\",\\\"default_variant\\\":{\\\"size\\\":\\\"\\\",\\\"color\\\":\\\"\\\"}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"={{ \\\"Classification: \\\" + JSON.stringify($node[\\\"Code - Parse B3\\\"].json.classification) + \\\"\\\\nAttributes: \\\" + JSON.stringify($node[\\\"Code - Parse B3\\\"].json.attributes) }}\"}]\n}"
+      },
+      "id": "b036b8f0-440a-422a-a511-0d7b341feca6",
+      "name": "Claude - B4 Variants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst raw = $node['Claude - B4 Variants'].json.content.find(b => b.type === 'text').text;\nconst variants = JSON.parse(raw.replace(/```json|```/g, '').trim());\nreturn [{ json: { ...($node['Code - Parse B3'].json), variants } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "6f4915e8-94c5-4f83-86de-c862f9c1f81c",
+      "name": "Code - Parse B4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.6,\n  \"system\": \"You are an SEO specialist for e-commerce fashion. Return ONLY valid JSON.\\n\\nFields:\\n- meta_title: 50-60 chars, primary keyword + gender + category\\n- meta_description: 150-160 chars, 2 keywords naturally, ends with soft CTA\\n- focus_keyword: ONE phrase, 2-4 words\\n- secondary_keywords: 5-8 related terms, mix short + long-tail\\n- tags: 10-15 short tags for filtering/discovery\\n- alt_text_front: under 125 chars, gender + color + garment\\n- alt_text_side: descriptive alt for side image\\n- alt_text_back: descriptive alt for back image\\n- url_slug: lowercase, hyphenated, max 60 chars\\n\\nNo keyword stuffing. All copy reads naturally.\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"={{ \\\"Classification: \\\" + JSON.stringify($node[\\\"Code - Parse B4\\\"].json.classification) + \\\"\\\\nAttributes: \\\" + JSON.stringify($node[\\\"Code - Parse B4\\\"].json.attributes) + \\\"\\\\nContent: \\\" + JSON.stringify($node[\\\"Code - Parse B4\\\"].json.content) }}\"}]\n}"
+      },
+      "id": "3e49a9b5-a7ff-48af-a020-b44d8615caea",
+      "name": "Claude - B5 SEO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst raw = $node['Claude - B5 SEO'].json.content.find(b => b.type === 'text').text;\nconst seo = JSON.parse(raw.replace(/```json|```/g, '').trim());\nreturn [{ json: { ...($node['Code - Parse B4'].json), seo } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "b8c02412-16d9-4846-aac2-0da294a3806e",
+      "name": "Code - Parse B5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.2,\n  \"system\": \"You are a data formatter. Merge all provided JSON inputs into one clean validated product record. Return ONLY valid JSON, no markdown, no commentary.\\n\\nRules:\\n- Preserve all data exactly. Do not rewrite or invent.\\n- If any field is missing from inputs, set it to null.\\n- Match the output schema exactly.\\n\\nSchema:\\n{\\n  \\\"product_id\\\": \\\"\\\",\\n  \\\"created_at\\\": \\\"\\\",\\n  \\\"source_image\\\": \\\"\\\",\\n  \\\"classification\\\": {},\\n  \\\"attributes\\\": {},\\n  \\\"content\\\": {},\\n  \\\"variants\\\": {},\\n  \\\"seo\\\": {},\\n  \\\"images\\\": {\\\"front\\\":\\\"\\\",\\\"side\\\":\\\"\\\",\\\"back\\\":\\\"\\\"}\\n}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"={{ \\\"B1: \\\" + JSON.stringify($node[\\\"Code - Parse B5\\\"].json.classification) + \\\"\\\\nB2: \\\" + JSON.stringify($node[\\\"Code - Parse B5\\\"].json.attributes) + \\\"\\\\nB3: \\\" + JSON.stringify($node[\\\"Code - Parse B5\\\"].json.content) + \\\"\\\\nB4: \\\" + JSON.stringify($node[\\\"Code - Parse B5\\\"].json.variants) + \\\"\\\\nB5: \\\" + JSON.stringify($node[\\\"Code - Parse B5\\\"].json.seo) }}\"}]\n}"
+      },
+      "id": "d7fb1cd6-d12a-4303-a4b1-7169db3f75a3",
+      "name": "Claude - B6 Final",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst raw = $node['Claude - B6 Final'].json.content.find(b => b.type === 'text').text;\nconst product = JSON.parse(raw.replace(/```json|```/g, '').trim());\nconst prev = $node['Code - Parse B5'].json;\nproduct.product_id = product.product_id || ('PRD-' + Date.now());\nproduct.created_at = product.created_at || new Date().toISOString();\nproduct.source_image = prev.raw_image_url;\nproduct.images = { front: prev.front_image_url, side: prev.side_image_url, back: prev.back_image_url };\nreturn [{ json: { filename: `product_${product.product_id}.json`, content: JSON.stringify(product, null, 2), product } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "5cf24dfd-6f22-4162-9172-ce6a57400d78",
+      "name": "Code - Parse B6 Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $json.filename }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $env.OUTPUT_FOLDER_ID }}",
+          "mode": "id"
+        },
+        "inputDataFieldName": "={{ Buffer.from($json.content).toString('base64') }}",
+        "options": {
+          "mimeType": "application/json"
+        }
+      },
+      "id": "ce5dd3bf-afcd-4c0d-9a23-7bf22851d997",
+      "name": "Google Drive - Save Product File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5040,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Download Image": {
+      "main": [
+        [
+          {
+            "node": "HF - Step 1 Get Upload URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Step 1 Get Upload URL": {
+      "main": [
+        [
+          {
+            "node": "HF - Step 2 PUT Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Step 2 PUT Binary": {
+      "main": [
+        [
+          {
+            "node": "HF - Step 3 Confirm Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Step 3 Confirm Upload": {
+      "main": [
+        [
+          {
+            "node": "Claude - B1 Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B1 Classify": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B1": {
+      "main": [
+        [
+          {
+            "node": "HF - Generate Front",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Generate Front": {
+      "main": [
+        [
+          {
+            "node": "HF - Generate Side",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Generate Side": {
+      "main": [
+        [
+          {
+            "node": "HF - Generate Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HF - Generate Back": {
+      "main": [
+        [
+          {
+            "node": "Code - Store Image URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Store Image URLs": {
+      "main": [
+        [
+          {
+            "node": "Claude - B2 Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B2 Attributes": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B2": {
+      "main": [
+        [
+          {
+            "node": "Claude - B3 Title Desc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B3 Title Desc": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B3": {
+      "main": [
+        [
+          {
+            "node": "Claude - B4 Variants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B4 Variants": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B4": {
+      "main": [
+        [
+          {
+            "node": "Claude - B5 SEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B5 SEO": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B5": {
+      "main": [
+        [
+          {
+            "node": "Claude - B6 Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - B6 Final": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse B6 Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse B6 Final": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Save Product File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [],
+  "meta": {
+    "notes": "SETUP REQUIRED BEFORE RUNNING:\n1. Set env vars: ANTHROPIC_API_KEY, HIGGSFIELD_API_KEY, HIGGSFIELD_GENERATION_ENDPOINT, OUTPUT_FOLDER_ID\n2. Replace REPLACE_WITH_YOUR_GOOGLE_DRIVE_CREDENTIAL_ID in both Google Drive nodes\n3. HIGGSFIELD_GENERATION_ENDPOINT: get the correct image generation REST endpoint from Higgsfield docs or support\n4. Webhook trigger URL: copy from the Webhook node after activating workflow\n5. Send POST to webhook with body: { image_url, file_id, gender_hint }"
+  }
+}

@@ -1,12 +1,12 @@
 import React from 'react'
 
-import Scroll3DRotation from '../components/Scroll3DRotation'
+import CurvedScroll from '../components/CurvedScroll'
 
 const Index = () => {
   return (
     <div>
 
-        <Scroll3DRotation/>
+        <CurvedScroll/>
     </div>
   )
 }

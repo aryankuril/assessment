@@ -136,15 +136,15 @@ export default function Scroll3DRotation() {
             <div key={img.src} className="panel absolute inset-0 flex flex-col">
               <div className="relative w-full h-full">
                <Image
-                  src={img.src}
-                  alt={img.caption}
-                  fill
-                  sizes="(max-width: 640px) 120px, 260px"
-                  priority={i === 0}        // LCP image
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  draggable={false}
-                />
+  src={img.src}
+  alt={img.caption}
+  fill
+  sizes="(max-width: 640px) 120px, 260px"
+  loading="lazy"
+  className="object-cover"
+  draggable={false}
+/>
+
               </div>
               <div className="text-black text-xs text-center">{img.caption}</div>
             </div>
