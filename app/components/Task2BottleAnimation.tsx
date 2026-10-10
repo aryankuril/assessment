@@ -52,7 +52,7 @@ function sceneOpacity(index: number, progress: number) {
   return 1;
 }
 
-function Bottle({ progress }: { progress: number }) {
+function Bottle({ progress, transitionProgress, direction }: { progress: number; transitionProgress: number; direction: 1 | -1 }) {
   const group = useRef<THREE.Group>(null);
   const targetColorRef = useRef(new THREE.Color());
   const { scene } = useGLTF('/models/bottle.glb');
@@ -86,14 +86,10 @@ function Bottle({ progress }: { progress: number }) {
     bottle.materials.forEach((material) => {
       if ('color' in material && material.color instanceof THREE.Color) material.color.lerp(targetColor, colorEase);
     });
-    const targetTurn = progress * Math.PI * 2.3 + Math.sin(state.clock.elapsedTime * 0.35) * 0.12;
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetTurn, 5, delta);
-    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, Math.sin(state.clock.elapsedTime * 0.42) * 0.035, 4, delta);
+    group.current.rotation.y = transitionProgress * direction * Math.PI * 2;
+    group.current.rotation.x = Math.sin(Math.PI * transitionProgress) * 0.035;
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, Math.sin(state.clock.elapsedTime * 0.8) * 0.055, 4, delta);
-    const segmentEnd = colorIndex < sceneStops.length - 1 ? sceneStops[colorIndex + 1] : 1;
-    const segmentLength = segmentEnd - sceneStops[colorIndex];
-    const segmentProgress = segmentLength > 0 ? THREE.MathUtils.clamp((progress - sceneStops[colorIndex]) / segmentLength, 0, 1) : 0;
-    group.current.scale.setScalar(1 + Math.sin(Math.PI * segmentProgress) * 0.08);
+    group.current.scale.setScalar(1 + Math.sin(Math.PI * transitionProgress) * 0.08);
   });
 
   useEffect(() => () => bottle.materials.forEach((material) => material.dispose()), [bottle]);
@@ -144,13 +140,14 @@ export default function Task2BottleAnimation() {
   const [scrollDirection, setScrollDirection] = useState<1 | -1>(1);
   const [backgroundScene, setBackgroundScene] = useState(0);
   const [previousBackground, setPreviousBackground] = useState<number | null>(null);
-  const [backgroundWipeComplete, setBackgroundWipeComplete] = useState(true);
+  const [backgroundTransitionProgress, setBackgroundTransitionProgress] = useState(1);
 
   useEffect(() => {
     const globalHeader = document.querySelector<HTMLElement>('body > header');
     const previousDisplay = globalHeader?.style.display;
     if (globalHeader) globalHeader.style.display = 'none';
     let frame = 0;
+    let backgroundFrame = 0;
     const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
@@ -166,8 +163,15 @@ export default function Task2BottleAnimation() {
             setPreviousBackground(backgroundSceneRef.current);
             backgroundSceneRef.current = nextBackgroundScene;
             setBackgroundScene(nextBackgroundScene);
-            setBackgroundWipeComplete(false);
-            requestAnimationFrame(() => setBackgroundWipeComplete(true));
+            cancelAnimationFrame(backgroundFrame);
+            setBackgroundTransitionProgress(0);
+            const startedAt = performance.now();
+            const advanceTransition = (time: number) => {
+              const linearProgress = THREE.MathUtils.clamp((time - startedAt) / 520, 0, 1);
+              setBackgroundTransitionProgress(1 - Math.pow(1 - linearProgress, 3));
+              if (linearProgress < 1) backgroundFrame = requestAnimationFrame(advanceTransition);
+            };
+            backgroundFrame = requestAnimationFrame(advanceTransition);
           }
           lastProgress.current = nextProgress;
         }
@@ -179,6 +183,7 @@ export default function Task2BottleAnimation() {
     window.addEventListener('resize', measure);
     return () => {
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(backgroundFrame);
       window.removeEventListener('scroll', measure);
       window.removeEventListener('resize', measure);
       if (globalHeader) globalHeader.style.display = previousDisplay ?? '';
@@ -201,8 +206,10 @@ export default function Task2BottleAnimation() {
           const isPrevious = index === previousBackground;
           const restingTransform = 'translate3d(0, 0, 0) scale(1)';
           const enteringTransform = scrollDirection > 0 ? 'translate3d(100%, 0, 0) scale(1.045)' : 'translate3d(-100%, 0, 0) scale(1.045)';
-          const transform = isCurrent ? (backgroundWipeComplete ? restingTransform : enteringTransform) : isPrevious ? restingTransform : enteringTransform;
-          return <div key={scene.id} className="absolute inset-0" style={{ opacity: isCurrent || isPrevious ? 1 : 0, transform, transformOrigin: 'center', zIndex: isCurrent ? 12 : isPrevious ? 11 : 0, transition: isCurrent ? 'transform 520ms cubic-bezier(.22,1,.36,1)' : 'none' }} aria-hidden="true"><CodeBackdrop scene={scene} progress={progress} /></div>;
+          const transitionOffset = (1 - backgroundTransitionProgress) * (scrollDirection > 0 ? 100 : -100);
+          const transitionScale = 1 + (1 - backgroundTransitionProgress) * 0.045;
+          const transform = isCurrent ? `translate3d(${transitionOffset}%, 0, 0) scale(${transitionScale})` : isPrevious ? restingTransform : enteringTransform;
+          return <div key={scene.id} className="absolute inset-0" style={{ opacity: isCurrent || isPrevious ? 1 : 0, transform, transformOrigin: 'center', zIndex: isCurrent ? 12 : isPrevious ? 11 : 0, transition: 'none' }} aria-hidden="true"><CodeBackdrop scene={scene} progress={progress} /></div>;
         })}
 
         <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/10 via-transparent via-[60%] to-black/70" />
@@ -212,7 +219,7 @@ export default function Task2BottleAnimation() {
             <directionalLight position={[4, 5, 5]} intensity={2.4} />
             <directionalLight position={[-4, 1, -3]} intensity={1.1} color="#ffe5d0" />
             <Suspense fallback={null}>
-              <Bottle progress={progress} />
+              <Bottle progress={progress} transitionProgress={backgroundTransitionProgress} direction={scrollDirection} />
             </Suspense>
           </Canvas>
         </div>
