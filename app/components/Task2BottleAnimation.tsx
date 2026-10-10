@@ -17,7 +17,7 @@ type Scene = {
 
 const scenes: Scene[] = [
   { id: 'sport', title: 'THE SPORT', eyebrow: 'FOR THE SPORT IN YOU  ·  STAY CHARGED  ·  BE READY TO PLAY', detail: 'A brightening burst of Niacinamide, Alpha Arbutin & Panthenol, touched by the lingering scent of icy mint & citrus.', background: 'radial-gradient(ellipse at 50% 37%, #f8d9d6 0%, #edb0b1 42%, #b66d76 100%)', accent: '#f7b7b5', bottle: '#d89086' },
-  { id: 'intro', title: 'EVERY SHOWER', eyebrow: 'SHAPES A NEW YOU.', background: 'radial-gradient(ellipse at 50% 43%, #d8e0df 0%, #839392 60%, #333d3d 100%)', accent: '#e6eeeb', bottle: '#d8bba6' },
+  { id: 'sport', title: 'EVERY SHOWER', eyebrow: 'SHAPES A NEW YOU.', detail: 'A brightening burst of Niacinamide, Alpha Arbutin & Panthenol, touched by the lingering scent of icy mint & citrus.', background: 'radial-gradient(ellipse at 50% 43%, #d8e0df 0%, #839392 60%, #333d3d 100%)', accent: '#e6eeeb', bottle: '#d8bba6' },
   { id: 'sage', title: 'THE SAGE', eyebrow: 'FOR THE SAGE IN YOU  ·  CALM THE CHAOS  ·  LEAD WITH WISDOM', detail: 'A purifying ritual of Blue Clay & Green Tea, leaving skin clear & balanced with the warm scent of Earthy Oud.', background: 'radial-gradient(ellipse at 50% 38%, #b9c8a9 0%, #80977b 55%, #455b4a 100%)', accent: '#d0ddbd', bottle: '#7f9d77' },
   { id: 'rebel', title: 'THE REBEL', eyebrow: 'FOR THE REBEL IN YOU  ·  RISE UNBOTHERED  ·  EMERGE UNAPOLOGETIC', detail: 'Clarifying actives and gritty exfoliants with Salicylic Acid, wrapped in the smoky scent of Spicy Leather.', background: 'radial-gradient(ellipse at 50% 36%, #ffca79 0%, #dc7743 52%, #713a35 100%)', accent: '#ffbd72', bottle: '#b85736' },
   { id: 'lover', title: 'THE LOVER', eyebrow: 'FOR THE LOVER IN YOU  ·  COMMAND DESIRE  ·  EMERGE IRRESISTIBLE', detail: 'A golden elixir of nourishment and radiance, wrapped in warm Santal, leaving skin soft and luminous.', background: 'radial-gradient(ellipse at 50% 38%, #f5d1cb 0%, #d8979b 54%, #825d68 100%)', accent: '#f5c2bd', bottle: '#d49a99' },
@@ -199,8 +199,10 @@ export default function Task2BottleAnimation() {
         {scenes.map((scene, index) => {
           const isCurrent = index === backgroundScene;
           const isPrevious = index === previousBackground;
-          const hiddenClip = scrollDirection > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)';
-          return <div key={scene.id} className="absolute inset-0" style={{ opacity: isCurrent || isPrevious ? 1 : 0, clipPath: isCurrent && !backgroundWipeComplete ? hiddenClip : undefined, zIndex: isCurrent ? 12 : isPrevious ? 11 : 0, transition: 'clip-path 260ms cubic-bezier(.16,1,.3,1)' }} aria-hidden="true"><CodeBackdrop scene={scene} progress={progress} /></div>;
+          const restingTransform = 'translate3d(0, 0, 0) scale(1)';
+          const enteringTransform = scrollDirection > 0 ? 'translate3d(100%, 0, 0) scale(1.045)' : 'translate3d(-100%, 0, 0) scale(1.045)';
+          const transform = isCurrent ? (backgroundWipeComplete ? restingTransform : enteringTransform) : isPrevious ? restingTransform : enteringTransform;
+          return <div key={scene.id} className="absolute inset-0" style={{ opacity: isCurrent || isPrevious ? 1 : 0, transform, transformOrigin: 'center', zIndex: isCurrent ? 12 : isPrevious ? 11 : 0, transition: isCurrent ? 'transform 520ms cubic-bezier(.22,1,.36,1)' : 'none' }} aria-hidden="true"><CodeBackdrop scene={scene} progress={progress} /></div>;
         })}
 
         <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/10 via-transparent via-[60%] to-black/70" />
@@ -227,8 +229,8 @@ export default function Task2BottleAnimation() {
           return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-3 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:flex-row sm:items-end sm:justify-between sm:gap-8" style={{ opacity, transition: 'opacity 120ms linear' }}><div className="max-w-[70vw] sm:max-w-[58vw]"><p className="font-black leading-[0.88] tracking-[-0.045em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]">{scene.title}</p><p className="mt-2 text-[8px] font-semibold tracking-[0.11em] text-white/90 sm:mt-3 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.08em]">{scene.eyebrow}</p></div><p className="max-w-[82vw] text-[10px] leading-[1.45] text-white/95 sm:max-w-[23vw] sm:text-[clamp(0.65rem,1vw,1rem)] sm:leading-[1.55]">{scene.detail}</p></div>;
         })}
 
-        <button onClick={skipToChooser} className="absolute bottom-[2.6%] left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-white/15 px-5 py-2.5 text-[9px] font-semibold tracking-wide text-white backdrop-blur-md transition hover:bg-white/25 sm:bottom-[2.8%] sm:px-6 sm:py-3 sm:text-[10px]">SKIP TO BUY PRODUCTS</button>
-        <div className="pointer-events-none absolute left-1/2 top-[76%] z-30 hidden -translate-x-1/2 sm:block" style={{ opacity: Math.max(0, 1 - progress * 1.6) }}><span className="flex h-10 w-4 items-start justify-center rounded-full border border-white/35 p-1"><span className="h-2 w-1 rounded-full bg-white/80 animate-bounce" /></span></div>
+        {/* <button onClick={skipToChooser} className="absolute bottom-[2.6%] left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-white/15 px-5 py-2.5 text-[9px] font-semibold tracking-wide text-white backdrop-blur-md transition hover:bg-white/25 sm:bottom-[2.8%] sm:px-6 sm:py-3 sm:text-[10px]">SKIP TO BUY PRODUCTS</button> */}
+        {/* <div className="pointer-events-none absolute left-1/2 top-[76%] z-30 hidden -translate-x-1/2 sm:block" style={{ opacity: Math.max(0, 1 - progress * 1.6) }}><span className="flex h-10 w-4 items-start justify-center rounded-full border border-white/35 p-1"><span className="h-2 w-1 rounded-full bg-white/80 animate-bounce" /></span></div> */}
 
         <div className="absolute inset-x-4 top-[28%] z-40 mx-auto max-w-[1500px]" style={{ opacity: chooserOpacity, pointerEvents: chooserOpacity > 0.5 ? 'auto' : 'none', transition: 'opacity 120ms linear' }}>
           <h2 className="mb-3 text-center text-[clamp(1.3rem,3.5vw,3.4rem)] font-black uppercase leading-none tracking-tight text-white sm:mb-6 [font-family:Impact,'Arial_Narrow',sans-serif]">WHO DO YOU WANT TO BE TODAY?</h2>
