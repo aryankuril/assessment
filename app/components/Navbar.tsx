@@ -23,7 +23,7 @@ export default function Navbar() {
     { href: "/task1", label: "Task1" },
     { href: "/task2", label: "Task2" },
     { href: "/task3", label: "Task3" },
-    { href: "/task45", label: "Task4&5" },
+    { href: "/task4", label: "Task4" },
   ];
 
   /* ---------------- SCROLL SHADOW ---------------- */
