@@ -53,6 +53,17 @@ export default function Task3CrencyAnimation() {
       const leftPhrases = statement.querySelectorAll('.task3-phrase-left');
       const rightPhrases = statement.querySelectorAll('.task3-phrase-right');
       const inlineMarks = statement.querySelectorAll('.task3-mark');
+      const gatheredScale = 0.44;
+      const gatheredGap = section.clientWidth * 0.01;
+      const gatheredWidth = floatingMarks.reduce((width, mark) => width + mark.offsetWidth * gatheredScale, 0) + gatheredGap * Math.max(0, floatingMarks.length - 1);
+      const gatheredStart = (section.clientWidth - gatheredWidth) / 2;
+      const gatheredMarks = floatingMarks.map((mark, index) => {
+        const widthBefore = floatingMarks.slice(0, index).reduce((width, previous) => width + previous.offsetWidth * gatheredScale + gatheredGap, 0);
+        return {
+          x: gatheredStart + widthBefore - mark.offsetLeft - mark.offsetWidth * (1 - gatheredScale) / 2,
+          y: (section.clientHeight - mark.offsetHeight * gatheredScale) / 2 - mark.offsetTop - mark.offsetHeight * (1 - gatheredScale) / 2,
+        };
+      });
       const stageBounds = section.getBoundingClientRect();
       const parkedMarks = floatingMarks.map((mark) => {
         const inlineMark = statement.querySelector<HTMLElement>(`.task3-mark[data-kind="${mark.dataset.kind}"]`);
@@ -97,14 +108,14 @@ export default function Task3CrencyAnimation() {
         duration: 0.18,
       }, 0.05);
       timeline.to(floatingMarks, {
-        x: (index) => ((38 + index * 6) - (20 + index * 12.5)) * window.innerWidth / 100,
-        y: () => -window.innerHeight * 0.23,
-        scale: 0.44,
+        x: (index) => gatheredMarks[index].x,
+        y: (index) => gatheredMarks[index].y,
+        scale: gatheredScale,
         rotation: 0,
         ease: 'power3.inOut',
         stagger: 0.025,
-        duration: 0.22,
-      }, 0.23);
+        duration: 0.3,
+      }, 0.38);
       timeline.to(floatingMarks, {
         x: (index) => parkedMarks[index].x,
         y: (index) => parkedMarks[index].y,
@@ -112,22 +123,22 @@ export default function Task3CrencyAnimation() {
         rotation: 0,
         ease: 'power3.inOut',
         stagger: 0.018,
-        duration: 0.22,
-      }, 0.48);
-      timeline.to(eyebrowRef.current, { autoAlpha: 0, y: -12, ease: 'power2.out', duration: 0.15 }, 0.64);
-      timeline.to(headlineRef.current, { yPercent: -20, scale: 0.86, autoAlpha: 0, ease: 'power2.inOut', duration: 0.22 }, 0.64);
-      timeline.to(contextNoteRef.current, { autoAlpha: 0, y: -18, ease: 'power2.out', duration: 0.18 }, 0.64);
-      timeline.to(statementRef.current, { autoAlpha: 1, y: 0, scale: 1, ease: 'power3.out', duration: 0.24 }, 0.7);
+        duration: 0.24,
+      }, 0.74);
+      timeline.to(eyebrowRef.current, { autoAlpha: 0, y: -12, ease: 'power2.out', duration: 0.15 }, 0.98);
+      timeline.to(headlineRef.current, { yPercent: -20, scale: 0.86, autoAlpha: 0, ease: 'power2.inOut', duration: 0.22 }, 0.98);
+      timeline.to(contextNoteRef.current, { autoAlpha: 0, y: -18, ease: 'power2.out', duration: 0.18 }, 0.98);
+      timeline.to(statementRef.current, { autoAlpha: 1, y: 0, scale: 1, ease: 'power3.out', duration: 0.24 }, 1.04);
       leftPhrases.forEach((phrase, index) => {
-        timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 0.72 + index * 0.105);
+        timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 1.06 + index * 0.105);
       });
       rightPhrases.forEach((phrase, index) => {
         const row = [0, 1, 3][index];
-        timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 0.72 + row * 0.105);
+        timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 1.06 + row * 0.105);
       });
-      timeline.to(pointerRef.current, { autoAlpha: 1, x: 0, y: 0, rotation: 0, ease: 'power3.out', duration: 0.2 }, 0.7);
-      timeline.to(pointerRef.current, { x: () => window.innerWidth * 0.11, y: () => -window.innerHeight * 0.12, ease: 'sine.inOut', duration: 0.32 }, 0.9);
-      timeline.to(statementRef.current, { scale: 1.025, ease: 'sine.inOut', duration: 0.3 }, 0.93);
+      timeline.to(pointerRef.current, { autoAlpha: 1, x: 0, y: 0, rotation: 0, ease: 'power3.out', duration: 0.2 }, 1.04);
+      timeline.to(pointerRef.current, { x: () => window.innerWidth * 0.11, y: () => -window.innerHeight * 0.12, ease: 'sine.inOut', duration: 0.32 }, 1.24);
+      timeline.to(statementRef.current, { scale: 1.025, ease: 'sine.inOut', duration: 0.3 }, 1.27);
     }, section);
 
     return () => ctx.revert();
