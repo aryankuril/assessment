@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -18,7 +17,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  /* ---------------- NAV ITEMS (ROUTES) ---------------- */
   const navItems: NavItem[] = [
     { href: "/task1", label: "Task1" },
     { href: "/task2", label: "Task2" },
@@ -26,14 +24,12 @@ export default function Navbar() {
     { href: "/task4", label: "Task4" },
   ];
 
-  /* ---------------- SCROLL SHADOW ---------------- */
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ---------------- ROUTE NAVIGATION ---------------- */
   const goToRoute = (href: string) => {
     router.push(href);
     setIsOpen(false);

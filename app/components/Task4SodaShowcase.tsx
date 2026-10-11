@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
@@ -8,6 +8,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import './Task4SodaShowcase.css';
 
 gsap.registerPlugin(ScrollTrigger);
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const flavors = [
   { name: 'Lemon Lime', color: '#b9e947', shade: '#80bd21', fruit: 'Lime', price: '$35.99' },
@@ -84,7 +85,7 @@ export default function Task4SodaShowcase() {
   const [flavorIndex, setFlavorIndex] = useState(3);
   const activeFlavor = flavors[flavorIndex];
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
     const ctx = gsap.context(() => {

@@ -213,11 +213,6 @@ export default function Task2BottleAnimation() {
     };
   }, []);
 
-  const skipToChooser = () => {
-    const track = trackRef.current;
-    if (!track) return;
-    window.scrollTo({ top: track.offsetTop + track.offsetHeight - window.innerHeight, behavior: 'smooth' });
-  };
   const chooserOpacity = sceneOpacity(scenes.length - 1, progress);
   const bottleOpacity = Math.max(0, 1 - sceneOpacity(scenes.length - 1, progress));
 
@@ -265,7 +260,6 @@ export default function Task2BottleAnimation() {
           return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-3 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:flex-row sm:items-end sm:justify-between sm:gap-8" style={entryStyle}><div className="max-w-[70vw] sm:max-w-[58vw]"><StaggeredText text={scene.title} progress={textProgress} className="block font-black leading-[0.88] tracking-[-0.01em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]" /><StaggeredText text={scene.eyebrow ?? ''} progress={textProgress} delay={0.18} className="mt-2 block text-[8px] font-semibold tracking-[0.18em] text-white/90 sm:mt-3 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.13em]" /></div><StaggeredText text={scene.detail ?? ''} progress={textProgress} delay={0.22} className="block max-w-[82vw] text-[10px] leading-[1.45] tracking-[0.035em] text-white/95 sm:max-w-[23vw] sm:text-[clamp(0.65rem,1vw,1rem)] sm:leading-[1.55]" /></div>;
         })}
 
-        {/* <button onClick={skipToChooser} className="absolute bottom-[2.6%] left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-white/15 px-5 py-2.5 text-[9px] font-semibold tracking-wide text-white backdrop-blur-md transition hover:bg-white/25 sm:bottom-[2.8%] sm:px-6 sm:py-3 sm:text-[10px]">SKIP TO BUY PRODUCTS</button> */}
         {/* <div className="pointer-events-none absolute left-1/2 top-[76%] z-30 hidden -translate-x-1/2 sm:block" style={{ opacity: Math.max(0, 1 - progress * 1.6) }}><span className="flex h-10 w-4 items-start justify-center rounded-full border border-white/35 p-1"><span className="h-2 w-1 rounded-full bg-white/80 animate-bounce" /></span></div> */}
 
         <div className="absolute inset-x-4 lg:top-[28%] top-[10%] z-40 mx-auto max-w-[1500px]" style={{ opacity: backgroundScene === scenes.length - 1 ? backgroundTransitionProgress : previousBackground === scenes.length - 1 ? 1 - backgroundTransitionProgress : 0, transform: `translate3d(0, ${(backgroundScene === scenes.length - 1 ? 1 - backgroundTransitionProgress : previousBackground === scenes.length - 1 ? -backgroundTransitionProgress : 1) * 24}px, 0)`, pointerEvents: chooserOpacity > 0.5 ? 'auto' : 'none', transition: 'none' }}>

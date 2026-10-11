@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type MarkKind = 'cursor' | 'heart' | 'chart' | 'spark' | 'bolt';
+type BrandMarkDefinition = { kind: MarkKind; color: string; shape: 'rounded' | 'circle'; label: string };
 
-const marks: { kind: MarkKind; color: string; shape: string; label: string }[] = [
+const marks: BrandMarkDefinition[] = [
   { kind: 'cursor', color: '#ee2782', shape: 'rounded', label: 'Cursor' },
   { kind: 'heart', color: '#bcff39', shape: 'rounded', label: 'Heart' },
   { kind: 'chart', color: '#1749f5', shape: 'circle', label: 'Growth chart' },
@@ -38,13 +40,10 @@ function BrandMark({ kind, compact = false }: { kind: MarkKind; compact?: boolea
 export default function Task3CrencyAnimation() {
   const sectionRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLDivElement>(null);
-  const eyebrowRef = useRef<HTMLParagraphElement>(null);
-  const contextNoteRef = useRef<HTMLDivElement>(null);
   const statementRef = useRef<HTMLDivElement>(null);
   const markRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const pointerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!sectionRef.current || !headlineRef.current || !statementRef.current) return;
     const section = sectionRef.current;
     const statement = statementRef.current;
@@ -78,13 +77,11 @@ export default function Task3CrencyAnimation() {
       });
 
       gsap.set(headlineRef.current, { transformOrigin: '50% 45%' });
-      gsap.set(contextNoteRef.current, { autoAlpha: 1, y: 0 });
       gsap.set(statementRef.current, { autoAlpha: 0, y: 36, scale: 0.96, transformOrigin: '50% 50%' });
       gsap.set(leftPhrases, { autoAlpha: 0, x: () => -window.innerWidth * 0.14 });
       gsap.set(rightPhrases, { autoAlpha: 0, x: () => window.innerWidth * 0.14 });
       gsap.set(inlineMarks, { opacity: 0 });
       gsap.set(floatingMarks, { autoAlpha: 0, y: 110, scale: 0.58, rotation: -14, transformOrigin: '50% 50%' });
-      gsap.set(pointerRef.current, { autoAlpha: 0, x: 80, y: 90, rotation: -10 });
 
       const timeline = gsap.timeline({
         scrollTrigger: {
@@ -125,9 +122,7 @@ export default function Task3CrencyAnimation() {
         stagger: 0.018,
         duration: 0.24,
       }, 0.74);
-      timeline.to(eyebrowRef.current, { autoAlpha: 0, y: -12, ease: 'power2.out', duration: 0.15 }, 0.98);
       timeline.to(headlineRef.current, { yPercent: -20, scale: 0.86, autoAlpha: 0, ease: 'power2.inOut', duration: 0.22 }, 0.98);
-      timeline.to(contextNoteRef.current, { autoAlpha: 0, y: -18, ease: 'power2.out', duration: 0.18 }, 0.98);
       timeline.to(statementRef.current, { autoAlpha: 1, y: 0, scale: 1, ease: 'power3.out', duration: 0.24 }, 1.04);
       leftPhrases.forEach((phrase, index) => {
         timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 1.06 + index * 0.105);
@@ -136,8 +131,6 @@ export default function Task3CrencyAnimation() {
         const row = [0, 1, 3][index];
         timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 1.06 + row * 0.105);
       });
-      timeline.to(pointerRef.current, { autoAlpha: 1, x: 0, y: 0, rotation: 0, ease: 'power3.out', duration: 0.2 }, 1.04);
-      timeline.to(pointerRef.current, { x: () => window.innerWidth * 0.11, y: () => -window.innerHeight * 0.12, ease: 'sine.inOut', duration: 0.32 }, 1.24);
       timeline.to(statementRef.current, { scale: 1.025, ease: 'sine.inOut', duration: 0.3 }, 1.27);
     }, section);
 
@@ -146,17 +139,8 @@ export default function Task3CrencyAnimation() {
 
   return <section ref={sectionRef} className="task3-stage">
     <div className="task3-top-wave" aria-hidden="true"><svg viewBox="0 0 1440 280" preserveAspectRatio="none"><path d="M0 0h1440v148c-173-4-335 30-493 70-103 27-178 58-270 57-164-2-283-91-421-115C164 146 73 145 0 161Z" fill="currentColor" /></svg></div>
-    {/* <p ref={eyebrowRef} className="task3-eyebrow">ABOUT US</p> */}
-
     <div ref={headlineRef} className="task3-headline" aria-label="We craft brands and digital products that scale">
-      {/* <p>WE CRAFT <span className="task3-custom-e">BR</span>ANDS AND DIGITAL</p>
-      <p className="task3-headline-second">PRODUCTS THAT <span className="task3-scale">SCALE</span></p> */}
      </div>
-
-      {/* <div ref={contextNoteRef} className="task3-context-note">
-        <strong>Clean in form. Sharp in function.</strong>
-        <span>Across our client projects: retention up 42%, bounce down 67%, and launches shipped 4× faster.</span>
-      </div> */}
 
       <div ref={statementRef} className="task3-statement" aria-label="We build brands people love and websites that win clients. Clean in form. Sharp in function.">
       <div className="task3-statement-line"><span className="task3-phrase-left">We Build brands</span><BrandMark kind="spark" compact /><span className="task3-phrase-right">people love</span></div>
@@ -174,11 +158,6 @@ export default function Task3CrencyAnimation() {
         style={{ left: `${20 + index * 12.5}%`, top: '71%', backgroundColor: mark.color }}
       ><MarkIcon kind={mark.kind} /></div>)}
     </div>
-
-    {/* <div ref={pointerRef} className="task3-you-pointer" aria-hidden="true">
-      <svg viewBox="0 0 48 54"><path d="M3 2 43 30 25 33 35 48 27 53 17 36 7 48Z" fill="#bcff39" stroke="#13002d" strokeWidth="2.5" strokeLinejoin="round" /></svg>
-      <span>You</span>
-    </div> */}
 
     <div className="task3-dock" aria-label="Site navigation preview">
       <span className="task3-dock-option"><i />Open: <b>Menu</b></span>

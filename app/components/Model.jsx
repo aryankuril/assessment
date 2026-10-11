@@ -1,6 +1,6 @@
 "use client";
 
-import { OrbitControls, Stage } from "@react-three/drei";
+import { Stage } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -95,7 +95,6 @@ const Model = () => {
     <Canvas camera={{ position: [0, 0, 5], fov: 35 }}>
       <Stage adjustCamera={false} />
       <ModelMesh />
-      {/* <OrbitControls /> */}
     </Canvas>
   );
 };

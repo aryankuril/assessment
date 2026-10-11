@@ -1,12 +1,22 @@
-const fs = require('fs');
-const path = require('path');
+async function inspectBottleModel() {
+  const [{ existsSync, readFileSync }, { resolve }] = await Promise.all([
+    import('node:fs'),
+    import('node:path'),
+  ]);
+  const filePath = resolve(process.cwd(), 'public', 'models', 'bottle.glb');
 
-const filePath = path.join(__dirname, 'public', 'models', 'bottle.glb');
-if (fs.existsSync(filePath)) {
-  const buffer = fs.readFileSync(filePath);
-  console.log("File exists, size:", buffer.length);
-  const magic = buffer.toString('ascii', 0, 4);
-  console.log("Magic bytes:", magic);
-} else {
-  console.log("File not found");
+  if (!existsSync(filePath)) {
+    console.error(`Model not found: ${filePath}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const buffer = readFileSync(filePath);
+  console.log(`Model found (${buffer.length.toLocaleString()} bytes).`);
+  console.log(`GLB signature: ${buffer.toString('ascii', 0, 4)}`);
 }
+
+inspectBottleModel().catch((error) => {
+  console.error('Could not inspect the bottle model:', error);
+  process.exitCode = 1;
+});

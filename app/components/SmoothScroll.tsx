@@ -7,7 +7,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   const lenis = useLenis();
   useEffect(() => {
     lenis?.scrollTo(0, { immediate: true });
-  }, [pathname]);
+  }, [lenis, pathname]);
   return <ReactLenis root>{children}</ReactLenis>;
 };
 export default SmoothScroll;
