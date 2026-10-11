@@ -37,6 +37,25 @@ const cardProducts = [
 const sceneStops = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9];
 const blendWidth = 0.025;
 
+function StaggeredText({ text, progress, delay = 0, className = '' }: { text: string; progress: number; delay?: number; className?: string }) {
+  const characters = Array.from(text);
+  const letterCount = characters.filter((character) => !/\s/.test(character)).length;
+  const staggerSpan = Math.min(0.90, Math.max(0.16, 0.84 - delay));
+  let letterIndex = 0;
+
+  return <span className={className} aria-label={text} style={{ whiteSpace: 'pre-wrap' }}>
+    {characters.map((character, index) => {
+      if (character === '\n') return <br key={`break-${index}`} />;
+      if (/\s/.test(character)) return character;
+      const start = delay + (letterIndex / Math.max(1, letterCount - 1)) * staggerSpan;
+      letterIndex += 1;
+      const revealProgress = THREE.MathUtils.clamp((progress - start) / 0.15, 0, 1);
+      const reveal = revealProgress * revealProgress * (3 - 2 * revealProgress);
+      return <span key={`letter-${index}`} aria-hidden="true" className="inline-block" style={{ opacity: reveal, transform: `translate3d(0, ${(1 - reveal) * 0.38}em, 0)`, willChange: 'transform, opacity' }}>{character}</span>;
+    })}
+  </span>;
+}
+
 function sceneOpacity(index: number, progress: number) {
   if (index > 0) {
     const start = sceneStops[index] - blendWidth / 2;
@@ -231,26 +250,31 @@ export default function Task2BottleAnimation() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[36%] bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-5 pt-5 sm:hidden">
-          <div className="flex h-9 w-9 items-center justify-center border-2 border-white text-[10px] font-black tracking-tight">FT</div>
-          <div className="flex gap-2 rounded-sm bg-black/25 px-3 py-2 text-[9px] tracking-[0.16em] text-white/90 backdrop-blur-sm"><span>SHOP</span><span>⌑</span><span>☰</span></div>
+          <div className="flex h-9 w-9 items-center justify-center border-2 border-white text-[10px] font-black tracking-[0.08em]">FT</div>
+          <div className="flex gap-2 rounded-sm bg-black/25 px-3 py-2 text-[9px] tracking-[0.20em] text-white/90 backdrop-blur-sm"><span>SHOP</span><span>⌑</span><span>☰</span></div>
         </div>
 
         {scenes.slice(0, -1).map((scene, index) => {
-          const opacity = sceneOpacity(index, progress);
-          if (scene.id === 'intro') return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-2 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:gap-3" style={{ opacity, transition: 'opacity 120ms linear' }}><p className="max-w-[78vw] font-black leading-[0.88] tracking-[-0.045em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]">EVERY SHOWER<br />SHAPES A NEW YOU.</p><p className="text-[8px] font-semibold tracking-[0.11em] text-white/90 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.08em]">FEEL THE LATHER · EMBRACE YOUR FLUX</p></div>;
-          return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-3 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:flex-row sm:items-end sm:justify-between sm:gap-8" style={{ opacity, transition: 'opacity 120ms linear' }}><div className="max-w-[70vw] sm:max-w-[58vw]"><p className="font-black leading-[0.88] tracking-[-0.045em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]">{scene.title}</p><p className="mt-2 text-[8px] font-semibold tracking-[0.11em] text-white/90 sm:mt-3 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.08em]">{scene.eyebrow}</p></div><p className="max-w-[82vw] text-[10px] leading-[1.45] text-white/95 sm:max-w-[23vw] sm:text-[clamp(0.65rem,1vw,1rem)] sm:leading-[1.55]">{scene.detail}</p></div>;
+          const isCurrent = index === backgroundScene;
+          const isPrevious = index === previousBackground;
+          const textProgress = isCurrent ? backgroundTransitionProgress : isPrevious ? 1 - backgroundTransitionProgress : 0;
+          const opacity = textProgress;
+          const offset = isCurrent ? (1 - backgroundTransitionProgress) * 24 : isPrevious ? -backgroundTransitionProgress * 12 : 24;
+          const entryStyle = { opacity, transform: `translate3d(0, ${offset}px, 0)`, transition: 'none' };
+          if (scene.id === 'intro') return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-2 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:gap-3" style={entryStyle}><StaggeredText text={'EVERY SHOWER\nSHAPES A NEW YOU.'} progress={textProgress} className="block max-w-[78vw] font-black leading-[0.88] tracking-[-0.01em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]" /><StaggeredText text="FEEL THE LATHER · EMBRACE YOUR FLUX" progress={textProgress} delay={0.2} className="block text-[8px] font-semibold tracking-[0.18em] text-white/90 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.13em]" /></div>;
+          return <div key={scene.id} className="pointer-events-none absolute inset-x-6 bottom-[9%] z-30 flex flex-col gap-3 sm:inset-x-[2.2vw] sm:bottom-[7%] sm:flex-row sm:items-end sm:justify-between sm:gap-8" style={entryStyle}><div className="max-w-[70vw] sm:max-w-[58vw]"><StaggeredText text={scene.title} progress={textProgress} className="block font-black leading-[0.88] tracking-[-0.01em] text-white [font-family:Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,7vw,7.4rem)]" /><StaggeredText text={scene.eyebrow ?? ''} progress={textProgress} delay={0.18} className="mt-2 block text-[8px] font-semibold tracking-[0.18em] text-white/90 sm:mt-3 sm:text-[clamp(0.55rem,0.85vw,0.9rem)] sm:tracking-[0.13em]" /></div><StaggeredText text={scene.detail ?? ''} progress={textProgress} delay={0.22} className="block max-w-[82vw] text-[10px] leading-[1.45] tracking-[0.035em] text-white/95 sm:max-w-[23vw] sm:text-[clamp(0.65rem,1vw,1rem)] sm:leading-[1.55]" /></div>;
         })}
 
         {/* <button onClick={skipToChooser} className="absolute bottom-[2.6%] left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-white/15 px-5 py-2.5 text-[9px] font-semibold tracking-wide text-white backdrop-blur-md transition hover:bg-white/25 sm:bottom-[2.8%] sm:px-6 sm:py-3 sm:text-[10px]">SKIP TO BUY PRODUCTS</button> */}
         {/* <div className="pointer-events-none absolute left-1/2 top-[76%] z-30 hidden -translate-x-1/2 sm:block" style={{ opacity: Math.max(0, 1 - progress * 1.6) }}><span className="flex h-10 w-4 items-start justify-center rounded-full border border-white/35 p-1"><span className="h-2 w-1 rounded-full bg-white/80 animate-bounce" /></span></div> */}
 
-        <div className="absolute inset-x-4 lg:top-[28%] top-[10%] z-40 mx-auto max-w-[1500px]" style={{ opacity: chooserOpacity, pointerEvents: chooserOpacity > 0.5 ? 'auto' : 'none', transition: 'opacity 120ms linear' }}>
-          <h2 className="mb-3 text-center text-[clamp(1.3rem,3.5vw,3.4rem)] font-black uppercase leading-none tracking-tight text-white sm:mb-6 [font-family:Impact,'Arial_Narrow',sans-serif]">WHO DO YOU WANT TO BE TODAY?</h2>
+        <div className="absolute inset-x-4 lg:top-[28%] top-[10%] z-40 mx-auto max-w-[1500px]" style={{ opacity: backgroundScene === scenes.length - 1 ? backgroundTransitionProgress : previousBackground === scenes.length - 1 ? 1 - backgroundTransitionProgress : 0, transform: `translate3d(0, ${(backgroundScene === scenes.length - 1 ? 1 - backgroundTransitionProgress : previousBackground === scenes.length - 1 ? -backgroundTransitionProgress : 1) * 24}px, 0)`, pointerEvents: chooserOpacity > 0.5 ? 'auto' : 'none', transition: 'none' }}>
+          <h2 className="mb-3 text-center text-[clamp(1.3rem,3.5vw,3.4rem)] font-black uppercase leading-none tracking-[0.035em] text-white sm:mb-6 [font-family:Impact,'Arial_Narrow',sans-serif]">WHO DO YOU WANT TO BE TODAY?</h2>
           <div className="grid max-h-[85svh] grid-cols-1 gap-3 overflow-y-auto pb-2 sm:max-h-none sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0">
             {cardProducts.map((product) => <article key={product.name} className="flex w-full flex-col bg-[#8299a2]/90 p-3 text-white shadow-xl backdrop-blur-sm sm:w-auto sm:p-[clamp(0.7rem,1.2vw,1.2rem)]">
-              <h3 className="text-center text-[11px] font-black tracking-wide sm:text-[clamp(0.75rem,1.1vw,1.1rem)]">{product.name}</h3>
+              <h3 className="text-center text-[11px] font-black tracking-[0.10em] sm:text-[clamp(0.75rem,1.1vw,1.1rem)]">{product.name}</h3>
               <div className="my-2 flex h-[22vw] items-center justify-center sm:h-[clamp(6rem,13vw,13rem)]"><div className="relative h-[88%] w-[24%] min-w-12 rounded-[24%_24%_12%_12%] border border-white/40 shadow-[inset_8px_0_12px_rgba(255,255,255,.24),inset_-9px_0_14px_rgba(0,0,0,.24),0_12px_20px_rgba(0,0,0,.2)]" style={{ background: `linear-gradient(90deg,${product.color},#f5e8d4 44%,${product.color} 72%,#634c47)` }}><div className="absolute -top-[14%] left-[28%] h-[16%] w-[44%] rounded-t-sm bg-[#302c2b]" /><div className="absolute left-[12%] right-[12%] top-[37%] flex h-[34%] flex-col items-center justify-center bg-[#eee6d6] px-0.5 text-center text-[clamp(5px,0.8vw,9px)] font-black leading-tight text-[#302c2b]">FLUX<br /><span className="text-[.75em] font-normal tracking-widest">THEORY</span></div></div></div>
-              <p className="line-clamp-2 text-[10px] font-bold leading-tight sm:text-[clamp(0.65rem,0.9vw,0.9rem)]">{product.line}</p><p className="mt-1 line-clamp-2 text-[8px] leading-tight text-white/80 sm:text-[clamp(0.5rem,0.7vw,0.72rem)]">{product.note}</p><div className="mt-auto flex items-end justify-between gap-2 pt-2"><span className="text-[9px] font-semibold sm:text-xs">MRP {product.price}</span><button className="bg-white px-2 py-1.5 text-[8px] font-black text-black sm:px-3 sm:text-[9px]">ADD YOUR VERSION</button></div>
+              <p className="line-clamp-2 text-[10px] font-bold leading-tight tracking-[0.035em] sm:text-[clamp(0.65rem,0.9vw,0.9rem)]">{product.line}</p><p className="mt-1 line-clamp-2 text-[8px] leading-tight tracking-[0.025em] text-white/80 sm:text-[clamp(0.5rem,0.7vw,0.72rem)]">{product.note}</p><div className="mt-auto flex items-end justify-between gap-2 pt-2"><span className="text-[9px] font-semibold tracking-[0.04em] sm:text-xs">MRP {product.price}</span><button className="bg-white px-2 py-1.5 text-[8px] font-black tracking-[0.06em] text-black sm:px-3 sm:text-[9px]">ADD YOUR VERSION</button></div>
             </article>)}
           </div>
         </div>
