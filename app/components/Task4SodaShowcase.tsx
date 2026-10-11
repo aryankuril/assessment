@@ -92,7 +92,6 @@ export default function Task4SodaShowcase() {
       const columns = gsap.utils.toArray<HTMLElement>('.task4-card-column');
       const cards = gsap.utils.toArray<HTMLElement>('.task4-grid-card');
       const focusTile = section.querySelector<HTMLElement>('.task4-zoom-card');
-      const focusArtwork = focusTile?.querySelector<HTMLElement>('.task4-artwork-card');
       const focusCard = focusTile?.querySelector<HTMLElement>('.task4-active-flavor .task4-slider-card');
       const followingTile = focusTile?.nextElementSibling as HTMLElement | null;
       if (!track || !focusCard || !focusTile || cards.length < 10 || columns.length !== 3) return;
@@ -101,9 +100,8 @@ export default function Task4SodaShowcase() {
       gsap.set(columns, { y: 0 });
       gsap.set(cards, { scale: 1, autoAlpha: .88, transformOrigin: '50% 50%' });
       gsap.set(columns[1], { zIndex: 'auto' });
-      if (focusArtwork) gsap.set(focusArtwork, { autoAlpha: 1 });
       const controls = focusCard.querySelectorAll('.task4-slider-arrow');
-      gsap.set(focusCard, { xPercent: -50, yPercent: -50, scale: 1, autoAlpha: 0, pointerEvents: 'none', transformOrigin: '50% 50%' });
+      gsap.set(focusCard, { xPercent: -50, yPercent: -50, scale: 1, autoAlpha: 1, pointerEvents: 'none', transformOrigin: '50% 50%' });
       gsap.set(controls, { autoAlpha: 0, y: 16 });
 
       const slideStep = () => cards[0].offsetHeight + parseFloat(getComputedStyle(columns[0]).rowGap || '0');
@@ -123,10 +121,11 @@ export default function Task4SodaShowcase() {
       timeline.to(columns[1], { y: () => -slideStep(), duration: .52, ease: 'power2.inOut' }, .16);
       timeline.to(columns[2], { y: () => slideStep(), duration: .52, ease: 'power2.inOut' }, .16);
       timeline.to(columns[1], { zIndex: 10, duration: .01 }, .64);
+      timeline.set(focusTile, { zIndex: 20 }, .64);
+      if (followingTile) timeline.set(followingTile, { zIndex: 0 }, .64);
       timeline.to(focusTile, { autoAlpha: 1, duration: .08, ease: 'none' }, .64);
       if (followingTile) timeline.to(followingTile, { autoAlpha: 0, duration: .06, ease: 'none' }, 1.04);
-      if (focusArtwork) timeline.to(focusArtwork, { autoAlpha: 0, duration: .12, ease: 'none' }, .64);
-      timeline.to(focusCard, { autoAlpha: 1, pointerEvents: 'auto', duration: .13, ease: 'power2.out' }, .64);
+      timeline.to(focusCard, { pointerEvents: 'auto', duration: .01 }, .64);
       timeline.to(focusCard, { width: () => section.clientWidth, height: () => section.clientHeight, borderRadius: 0, duration: .31, ease: 'power2.inOut' }, .72);
       timeline.to(controls, { autoAlpha: 1, y: 0, stagger: .035, duration: .12, ease: 'power2.out' }, .89);
     }, section);
@@ -151,7 +150,7 @@ export default function Task4SodaShowcase() {
             <div className="task4-card-column">
               <div className="task4-grid-card"><ArtworkCard src="/task4/choose-flavor.webp" alt="Choose Your Flavor selector"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/live-gutsy.webp" alt="Fizzy Live Gutsy campaign"/></div>
-              <div className="task4-grid-card task4-zoom-card"><ArtworkCard src="/task4/choose-flavor.webp" alt="Choose a Fizzy flavor"/><div className="task4-active-flavor"><FlavorSlide flavor={activeFlavor} active onPrevious={() => cycleFlavor(-1)} onNext={() => cycleFlavor(1)}/></div></div>
+              <div className="task4-grid-card task4-zoom-card"><div className="task4-active-flavor"><FlavorSlide flavor={activeFlavor} active onPrevious={() => cycleFlavor(-1)} onNext={() => cycleFlavor(1)}/></div></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/choose-flavor.webp" alt="Choose a Fizzy flavor"/></div>
             </div>
             <div className="task4-card-column">
