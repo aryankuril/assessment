@@ -29,7 +29,7 @@ function BrandMark({ kind, compact = false }: { kind: MarkKind; compact?: boolea
   return <span
     className={`task3-mark ${mark.shape === 'circle' ? 'is-circle' : 'is-rounded'} ${compact ? 'is-compact' : ''}`}
     data-kind={kind}
-    style={{ backgroundColor: mark.color }}
+    style={{ backgroundColor: mark.color, opacity: compact ? 0 : 1 }}
     role="img"
     aria-label={mark.label}
   ><MarkIcon kind={kind} /></span>;
@@ -53,8 +53,6 @@ export default function Task3CrencyAnimation() {
       const leftPhrases = statement.querySelectorAll('.task3-phrase-left');
       const rightPhrases = statement.querySelectorAll('.task3-phrase-right');
       const inlineMarks = statement.querySelectorAll('.task3-mark');
-      const badgeRevealRows = [3, 1, 3, 0, 2];
-      const inlineMarkRows = [0, 1, 2, 3, 3];
       const stageBounds = section.getBoundingClientRect();
       const parkedMarks = floatingMarks.map((mark) => {
         const inlineMark = statement.querySelector<HTMLElement>(`.task3-mark[data-kind="${mark.dataset.kind}"]`);
@@ -127,20 +125,9 @@ export default function Task3CrencyAnimation() {
         const row = [0, 1, 3][index];
         timeline.to(phrase, { autoAlpha: 1, x: 0, ease: 'power3.out', duration: 0.24 }, 0.72 + row * 0.105);
       });
-      inlineMarks.forEach((mark, index) => {
-        timeline.to(mark, { opacity: 1, ease: 'power2.out', duration: 0.14 }, 0.72 + inlineMarkRows[index] * 0.105);
-      });
-      floatingMarks.forEach((mark, index) => {
-        timeline.to(mark, { autoAlpha: 0, ease: 'power2.out', duration: 0.16 }, 0.72 + badgeRevealRows[index] * 0.105);
-      });
       timeline.to(pointerRef.current, { autoAlpha: 1, x: 0, y: 0, rotation: 0, ease: 'power3.out', duration: 0.2 }, 0.7);
       timeline.to(pointerRef.current, { x: () => window.innerWidth * 0.11, y: () => -window.innerHeight * 0.12, ease: 'sine.inOut', duration: 0.32 }, 0.9);
       timeline.to(statementRef.current, { scale: 1.025, ease: 'sine.inOut', duration: 0.3 }, 0.93);
-      timeline.to(floatingMarks, {
-        autoAlpha: 0,
-        ease: 'power2.out',
-        duration: 0.22,
-      }, 0.72);
     }, section);
 
     return () => ctx.revert();
@@ -148,7 +135,7 @@ export default function Task3CrencyAnimation() {
 
   return <section ref={sectionRef} className="task3-stage">
     <div className="task3-top-wave" aria-hidden="true"><svg viewBox="0 0 1440 280" preserveAspectRatio="none"><path d="M0 0h1440v148c-173-4-335 30-493 70-103 27-178 58-270 57-164-2-283-91-421-115C164 146 73 145 0 161Z" fill="currentColor" /></svg></div>
-    <p ref={eyebrowRef} className="task3-eyebrow">ABOUT US</p>
+    {/* <p ref={eyebrowRef} className="task3-eyebrow">ABOUT US</p> */}
 
     <div ref={headlineRef} className="task3-headline" aria-label="We craft brands and digital products that scale">
       {/* <p>WE CRAFT <span className="task3-custom-e">BR</span>ANDS AND DIGITAL</p>
