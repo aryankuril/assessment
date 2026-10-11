@@ -105,6 +105,14 @@ export default function Task4SodaShowcase() {
       gsap.set(controls, { autoAlpha: 0, y: 16 });
 
       const slideStep = () => cards[0].offsetHeight + parseFloat(getComputedStyle(columns[0]).rowGap || '0');
+      const zoomCenterOffset = () => {
+        const tileBounds = focusTile.getBoundingClientRect();
+        const stageBounds = section.getBoundingClientRect();
+        return {
+          x: stageBounds.left + stageBounds.width / 2 - (tileBounds.left + tileBounds.width / 2),
+          y: stageBounds.top + stageBounds.height / 2 - (tileBounds.top + tileBounds.height / 2),
+        };
+      };
       const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -126,7 +134,15 @@ export default function Task4SodaShowcase() {
       timeline.to(focusTile, { autoAlpha: 1, duration: .08, ease: 'none' }, .64);
       if (followingTile) timeline.to(followingTile, { autoAlpha: 0, duration: .06, ease: 'none' }, 1.04);
       timeline.to(focusCard, { pointerEvents: 'auto', duration: .01 }, .64);
-      timeline.to(focusCard, { width: () => section.clientWidth, height: () => section.clientHeight, borderRadius: 0, duration: .31, ease: 'power2.inOut' }, .72);
+      timeline.to(focusCard, {
+        x: () => zoomCenterOffset().x,
+        y: () => zoomCenterOffset().y,
+        width: () => section.clientWidth,
+        height: () => section.clientHeight,
+        borderRadius: 0,
+        duration: .31,
+        ease: 'power2.inOut',
+      }, .72);
       timeline.to(controls, { autoAlpha: 1, y: 0, stagger: .035, duration: .12, ease: 'power2.out' }, .89);
     }, section);
     return () => ctx.revert();
@@ -140,6 +156,7 @@ export default function Task4SodaShowcase() {
         <div className="task4-card-grid-window">
           <div className="task4-card-grid">
             <div className="task4-card-column">
+              <div className="task4-grid-card task4-column-overscan-card"><ArtworkCard src="/task4/try-flavors.webp" alt="Try all five Fizzy flavors"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/try-flavors.webp" alt="Try all five Fizzy flavors"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/live-gutsy.webp" alt="Fizzy Live Gutsy campaign"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/try-flavors.webp" alt="Try all five Fizzy flavors"/></div>
@@ -154,6 +171,7 @@ export default function Task4SodaShowcase() {
               <div className="task4-grid-card"><ArtworkCard src="/task4/choose-flavor.webp" alt="Choose a Fizzy flavor"/></div>
             </div>
             <div className="task4-card-column">
+              <div className="task4-grid-card task4-column-overscan-card"><ArtworkCard src="/task4/live-gutsy.webp" alt="Fizzy Live Gutsy campaign"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/live-gutsy.webp" alt="Fizzy Live Gutsy campaign"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/choose-flavor.webp" alt="Choose a Fizzy flavor"/></div>
               <div className="task4-grid-card"><ArtworkCard src="/task4/live-gutsy.webp" alt="Fizzy soda flavor campaign"/></div>

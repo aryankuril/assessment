@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { CartProvider } from "@/context/CartContext";
+import SmoothScroll from "./components/SmoothScroll"
 
 import "./globals.css";
 import Navbar from "./components/Navbar"
@@ -30,9 +30,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-         <CartProvider>
+       
          <Navbar/>
-         {children}</CartProvider>
+        <SmoothScroll>
+          
+            {children}
+         
+        </SmoothScroll>
       </body>
     </html>
   );
